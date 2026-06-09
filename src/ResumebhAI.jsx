@@ -2,13 +2,16 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import * as mammoth from "mammoth";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const RAZORPAY_KEY  = "rzp_test_XXXXXXXXXXXXXXXX";
-const TEST_MODE     = true;
+const RAZORPAY_KEY  = import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_XXXXXXXXXXXXXXXX";
+const TEST_MODE     = !import.meta.env.VITE_RAZORPAY_KEY;
 const ADMIN_EMAILS  = ["brainquisitive@gmail.com"];
 const FB_CONFIG = {
-  apiKey:"YOUR_API_KEY", authDomain:"YOUR_PROJECT.firebaseapp.com",
-  projectId:"YOUR_PROJECT_ID", storageBucket:"YOUR_PROJECT.appspot.com",
-  messagingSenderId:"YOUR_SENDER_ID", appId:"YOUR_APP_ID",
+  apiKey:             import.meta.env.VITE_FB_API_KEY            || "YOUR_API_KEY",
+  authDomain:         import.meta.env.VITE_FB_AUTH_DOMAIN        || "YOUR_PROJECT.firebaseapp.com",
+  projectId:          import.meta.env.VITE_FB_PROJECT_ID         || "YOUR_PROJECT_ID",
+  storageBucket:      import.meta.env.VITE_FB_STORAGE_BUCKET     || "YOUR_PROJECT.appspot.com",
+  messagingSenderId:  import.meta.env.VITE_FB_MESSAGING_SENDER_ID|| "YOUR_SENDER_ID",
+  appId:              import.meta.env.VITE_FB_APP_ID             || "YOUR_APP_ID",
 };
 const FB_READY = FB_CONFIG.apiKey !== "YOUR_API_KEY";
 const FONT = "Arial, sans-serif";
