@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import * as mammoth from "mammoth";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const RAZORPAY_KEY  = "rzp_test_XXXXXXXXXXXXXXXX";
@@ -811,7 +810,7 @@ export default function App(){
       };
       r.readAsDataURL(f);
     } else {
-      try{const ab=await f.arrayBuffer();const res=await mammoth.extractRawText({arrayBuffer:ab});setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));}
+      try{const ab=await f.arrayBuffer();const mammothLib=await import('mammoth');const res=await mammothLib.extractRawText({arrayBuffer:ab});setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));}
       catch{setError('Could not read Word file. Try saving as PDF.');setFile(null);}
     }
   },[]);
