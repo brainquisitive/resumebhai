@@ -167,6 +167,18 @@ const runAlgorithmicAnalysis = (text) => {
   };
 };
 
+// ─── Resume detection ─────────────────────────────────────────────────────────
+const isLikelyResume = (text) => {
+  if (!text || text.trim().length < 50) return { ok: false, reason: 'This document is too short to be a resume.' };
+  const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+  if (wordCount < 80) return { ok: false, reason: 'This document is too short to be a resume (under 80 words).' };
+  const hasSection = /\b(experience|education|skills|employment|work history|qualification|objective|summary|profile|projects|certifications|achievements|internship)\b/i.test(text);
+  const hasContact = /[\w.+-]+@[\w-]+\.\w+/.test(text) || /[\+\d][\d\s\-\(\)]{9,}/.test(text);
+  if (!hasSection && !hasContact) return { ok: false, reason: 'This does not appear to be a resume. Please upload a resume with your experience, education, and contact details.' };
+  if (!hasSection) return { ok: false, reason: 'No resume sections found (Experience, Education, Skills). Please upload a proper resume document.' };
+  return { ok: true };
+};
+
 // ─── PDF text extraction ──────────────────────────────────────────────────────
 const extractPDFText = async (base64) => {
   await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
@@ -208,7 +220,36 @@ const signInWithGoogle = async () => {
   const auth = window.firebase.auth();
   const provider = new window.firebase.auth.GoogleAuthProvider();
   const result = await auth.signInWithPopup(provider);
-  return {id:result.user.uid,name:result.user.displayName,email:result.user.email,photo:result.user.photoURL};
+  return {id:result.user.uid,name:result.user.displayName,email:result.user.email,photo:result.user.photoURL,emailVerified:result.user.emailVerified};
+};
+const firebaseRegister = async (name,email,password) => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const auth = window.firebase.auth();
+  const result = await auth.createUserWithEmailAndPassword(email,password);
+  await result.user.updateProfile({displayName:name});
+  await result.user.sendEmailVerification();
+  return {id:result.user.uid,name,email:result.user.email,emailVerified:false,photo:null};
+};
+const firebaseLogin = async (email,password) => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const auth = window.firebase.auth();
+  const result = await auth.signInWithEmailAndPassword(email,password);
+  return {id:result.user.uid,name:result.user.displayName||email.split('@')[0],email:result.user.email,emailVerified:result.user.emailVerified,photo:null};
+};
+const firebaseSendVerification = async () => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const auth = window.firebase.auth();
+  if(auth.currentUser) await auth.currentUser.sendEmailVerification();
+};
+const firebaseCheckVerified = async () => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const auth = window.firebase.auth();
+  if(auth.currentUser){await auth.currentUser.reload();return auth.currentUser.emailVerified;}
+  return false;
 };
 const DB = {
   async saveAnalysis(userId,entry){
@@ -224,6 +265,7 @@ const DB = {
   async savePost(post){ const db=await loadFirebase(); if(db) await db.collection('blogs').doc(post.id).set(post); else { const l=JSON.parse(localStorage.getItem('rbhai_blogs')||'[]');localStorage.setItem('rbhai_blogs',JSON.stringify([post,...l.filter(x=>x.id!==post.id)])); } },
   async deletePost(id){ const db=await loadFirebase(); if(db) await db.collection('blogs').doc(id).delete(); else { const l=JSON.parse(localStorage.getItem('rbhai_blogs')||'[]');localStorage.setItem('rbhai_blogs',JSON.stringify(l.filter(x=>x.id!==id))); } },
   async loadPosts(){ const db=await loadFirebase(); if(db){const snap=await db.collection('blogs').orderBy('date','desc').get();return snap.docs.map(d=>d.data());} return JSON.parse(localStorage.getItem('rbhai_blogs')||'[]'); },
+  async storeUser(user){ const db=await loadFirebase(); if(db) await db.collection('users').doc(String(user.id)).set({email:user.email,name:user.name||'',provider:user.photo?'google':'email',emailVerified:user.emailVerified||false,createdAt:new Date().toISOString()},{merge:true}); },
 };
 
 // ─── Auth storage ─────────────────────────────────────────────────────────────
@@ -283,21 +325,33 @@ function AuthModal({onAuth,onClose,reason}){
   const [form,setForm]=useState({name:'',email:'',password:'',confirm:''});
   const [err,setErr]=useState('');const [msg,setMsg]=useState('');const [loading,setLoading]=useState(false);const [showPw,setShowPw]=useState(false);
   const set=(k,v)=>{setForm(p=>({...p,[k]:v}));setErr('');setMsg('');};
-  const login=()=>{
+  const login=async()=>{
     if(!form.email||!form.password){setErr('Fill in all fields.');return;}
+    setLoading(true);setErr('');
+    if(FB_READY){
+      try{const u=await firebaseLogin(form.email,form.password);setSession(u);onAuth(u);}
+      catch(e){setErr(e.message.replace('Firebase: ',''));}
+      setLoading(false);return;
+    }
     const u=getUsers().find(u=>u.email.toLowerCase()===form.email.toLowerCase()&&u.password===form.password);
-    if(!u){setErr('Incorrect email or password.');return;}
-    setSession(u);onAuth(u);
+    if(!u){setErr('Incorrect email or password.');setLoading(false);return;}
+    setSession(u);onAuth(u);setLoading(false);
   };
-  const register=()=>{
+  const register=async()=>{
     if(!form.name||!form.email||!form.password||!form.confirm){setErr('Fill in all fields.');return;}
     if(!form.email.includes('@')){setErr('Invalid email.');return;}
     if(form.password.length<6){setErr('Password must be 6+ characters.');return;}
     if(form.password!==form.confirm){setErr('Passwords do not match.');return;}
+    setLoading(true);setErr('');
+    if(FB_READY){
+      try{const u=await firebaseRegister(form.name,form.email,form.password);setSession(u);onAuth(u);}
+      catch(e){setErr(e.message.replace('Firebase: ',''));}
+      setLoading(false);return;
+    }
     const users=getUsers();
-    if(users.find(u=>u.email.toLowerCase()===form.email.toLowerCase())){setErr('Account already exists.');return;}
-    const u={id:Date.now(),name:form.name,email:form.email,password:form.password};
-    saveUsers([...users,u]);setSession(u);onAuth(u);
+    if(users.find(u=>u.email.toLowerCase()===form.email.toLowerCase())){setErr('Account already exists.');setLoading(false);return;}
+    const u={id:Date.now(),name:form.name,email:form.email,password:form.password,emailVerified:false};
+    saveUsers([...users,u]);setSession(u);onAuth(u);setLoading(false);
   };
   const googleLogin=async()=>{
     setLoading(true);setErr('');
@@ -305,9 +359,20 @@ function AuthModal({onAuth,onClose,reason}){
     catch(e){setErr(FB_READY?e.message:'Enable Google Sign-In by configuring Firebase in the app.');}
     setLoading(false);
   };
-  const forgot=()=>{
+  const forgot=async()=>{
     if(!form.email.includes('@')){setErr('Enter a valid email.');return;}
-    setLoading(true);setTimeout(()=>{setLoading(false);setMsg(`Reset link sent to ${form.email} (if account exists).`);},1500);
+    setLoading(true);setErr('');
+    if(FB_READY){
+      try{
+        await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+        if(!window.firebase.apps.length)window.firebase.initializeApp(FB_CONFIG);
+        const auth=window.firebase.auth();
+        await auth.sendPasswordResetEmail(form.email);
+        setMsg(`Password reset email sent to ${form.email}.`);
+      }catch(e){setErr(e.message.replace('Firebase: ',''));}
+      setLoading(false);return;
+    }
+    setTimeout(()=>{setLoading(false);setMsg(`Reset link sent to ${form.email} (if account exists).`);},1500);
   };
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(10,17,40,0.6)',backdropFilter:'blur(6px)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
@@ -332,10 +397,52 @@ function AuthModal({onAuth,onClose,reason}){
         {view==='login'&&<div style={{textAlign:'right',marginBottom:16}}><button onClick={()=>{setView('forgot');setErr('');}} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:C.primary,fontWeight:700,fontFamily:FONT}}>Forgot password?</button></div>}
         {err&&<div style={{background:'#FFF0EC',border:'1px solid #FFCBB8',borderRadius:8,padding:'9px 13px',fontSize:13,color:'#C73800',marginBottom:12,fontFamily:FONT}}>⚠️ {err}</div>}
         {msg&&<div style={{background:'#E3FBF3',border:'1px solid #9FE1CB',borderRadius:8,padding:'9px 13px',fontSize:13,color:'#0A7D5A',marginBottom:12,fontFamily:FONT}}>✅ {msg}</div>}
-        {view==='login'&&<button className="btn-primary" onClick={login} style={{width:'100%',padding:'13px',fontSize:15}}>Sign In →</button>}
-        {view==='register'&&<button className="btn-primary" onClick={register} style={{width:'100%',padding:'13px',fontSize:15}}>Create Account →</button>}
+        {view==='login'&&<button className="btn-primary" onClick={login} disabled={loading} style={{width:'100%',padding:'13px',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>{loading?<><Spinner color="#fff"/>Signing In…</>:'Sign In →'}</button>}
+        {view==='register'&&<button className="btn-primary" onClick={register} disabled={loading} style={{width:'100%',padding:'13px',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>{loading?<><Spinner color="#fff"/>Creating Account…</>:'Create Account →'}</button>}
         {view==='forgot'&&<button className="btn-primary" onClick={forgot} disabled={loading} style={{width:'100%',padding:'13px',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>{loading?<><Spinner/>Sending…</>:'Send Reset Link →'}</button>}
         {view==='forgot'&&<div style={{textAlign:'center',marginTop:14}}><button onClick={()=>{setView('login');setErr('');setMsg('');}} style={{background:'none',border:'none',cursor:'pointer',color:C.primary,fontWeight:700,fontSize:13,fontFamily:FONT}}>← Back to sign in</button></div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── EMAIL VERIFICATION WALL ──────────────────────────────────────────────────
+function EmailVerificationWall({email,onVerified,onLogout}){
+  const [checking,setChecking]=useState(false);
+  const [sending,setSending]=useState(false);
+  const [msg,setMsg]=useState('');
+  const check=async()=>{
+    setChecking(true);setMsg('');
+    try{
+      const verified=await firebaseCheckVerified();
+      if(verified) onVerified();
+      else setMsg('Email not yet verified. Check your inbox and click the link, then try again.');
+    }catch(e){setMsg('Error checking: '+e.message);}
+    setChecking(false);
+  };
+  const resend=async()=>{
+    setSending(true);setMsg('');
+    try{await firebaseSendVerification();setMsg('Verification email resent! Check your inbox.');}
+    catch(e){setMsg('Could not resend: '+e.message);}
+    setSending(false);
+  };
+  return(
+    <div style={{maxWidth:480,margin:'80px auto',padding:'0 24px',textAlign:'center'}}>
+      <div className="card" style={{padding:'40px 32px'}}>
+        <div style={{fontSize:48,marginBottom:16}}>📧</div>
+        <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:22,color:C.text,marginBottom:10}}>Verify Your Email</h2>
+        <p style={{fontSize:14,color:C.muted,lineHeight:1.7,marginBottom:8,fontFamily:FONT}}>We sent a verification link to <b style={{color:C.text}}>{email}</b>.</p>
+        <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>Click the link in the email, then come back and click the button below.</p>
+        {msg&&<div style={{background:msg.includes('not yet')||msg.includes('Error')||msg.includes('not')?'#FFF0EC':'#E3FBF3',border:`1px solid ${msg.includes('not yet')||msg.includes('Error')||msg.includes('not')?'#FFCBB8':'#9FE1CB'}`,borderRadius:8,padding:'9px 13px',fontSize:13,color:msg.includes('not yet')||msg.includes('Error')||msg.includes('not')?'#C73800':'#0A7D5A',marginBottom:16,fontFamily:FONT}}>{msg}</div>}
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <button onClick={check} disabled={checking} className="btn-primary" style={{padding:'13px',fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+            {checking?<><Spinner color="#fff"/>Checking…</>:"✅ I've Verified My Email"}
+          </button>
+          <button onClick={resend} disabled={sending} className="btn-secondary" style={{padding:'11px',fontSize:14}}>
+            {sending?'Sending…':'📨 Resend Verification Email'}
+          </button>
+          <button onClick={onLogout} style={{background:'none',border:'none',cursor:'pointer',color:C.muted,fontSize:13,fontFamily:FONT,marginTop:4}}>Sign out and use a different account</button>
+        </div>
       </div>
     </div>
   );
@@ -797,33 +904,50 @@ export default function App(){
   const [analysisId,setAnalysisId]=useState(null);
   const [viewReport,setViewReport]=useState(null);
   const [error,setError]=useState('');
+  const [pendingAnalysis,setPendingAnalysis]=useState(false);
+  const [showVerifyWall,setShowVerifyWall]=useState(false);
 
   useEffect(()=>{const s=getSession();if(s)setUser(s);},[]);
 
   const showAuth=(reason='')=>{setAuthReason(reason);setShowAuthModal(true);};
 
   const handleFile=useCallback(async f=>{
-    if(!f)return; setFile(f); setError('');
+    if(!f)return; setFile(f); setError(''); setAlgoResult(null);
     const isPDF=f.type==='application/pdf'||f.name.endsWith('.pdf');
     if(isPDF){
       const r=new FileReader();
       r.onload=async e=>{
         const b=e.target.result.split(',')[1];
-        setB64(b);setFileText(null);
-        try{const t=await extractPDFText(b);setAlgoResult(runAlgorithmicAnalysis(t));}catch{}
+        try{
+          const t=await extractPDFText(b);
+          const chk=isLikelyResume(t);
+          if(!chk.ok){setError('🚫 '+chk.reason);setFile(null);setB64(null);return;}
+          setB64(b);setFileText(null);setAlgoResult(runAlgorithmicAnalysis(t));
+        }catch{setError('Could not read PDF. Try a different file.');setFile(null);}
       };
       r.readAsDataURL(f);
     } else {
-      try{const ab=await f.arrayBuffer();const res=await mammoth.extractRawText({arrayBuffer:ab});setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));}
+      try{
+        const ab=await f.arrayBuffer();
+        const res=await mammoth.extractRawText({arrayBuffer:ab});
+        const chk=isLikelyResume(res.value);
+        if(!chk.ok){setError('🚫 '+chk.reason);setFile(null);return;}
+        setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));
+      }
       catch{setError('Could not read Word file. Try saving as PDF.');setFile(null);}
     }
   },[]);
 
   const analyzeResume=async()=>{
     if(!b64&&!fileText){setError('Please upload a resume file.');return;}
-    if(algoResult){setAnalysisId(Date.now().toString());setAnalysis(null);setPage('results');return;}
-    setError('');setLoading(true);setLoadingMsg('Analysing…');
-    setTimeout(()=>{setLoading(false);setError('Could not extract text. Try a different file.');},3000);
+    if(!algoResult){setError('Could not extract text from this file. Try a different file.');return;}
+    if(!user){
+      setPendingAnalysis(true);
+      showAuth('Create a free account to see your resume analysis');
+      return;
+    }
+    if(FB_READY&&!user.emailVerified){setShowVerifyWall(true);return;}
+    setAnalysisId(Date.now().toString());setAnalysis(null);setPage('results');
   };
 
   const saveAnalysis=async()=>{
@@ -838,13 +962,33 @@ export default function App(){
   const activeForm = viewReport?viewReport.form:form;
   const activeId = viewReport?viewReport.id:analysisId;
 
-  const logout=()=>{clearSession();setUser(null);};
+  const handleAuth=async(u)=>{
+    setUser(u);setShowAuthModal(false);
+    try{await DB.storeUser(u);}catch{}
+    if(FB_READY&&!u.emailVerified){setShowVerifyWall(true);return;}
+    if(pendingAnalysis&&algoResult){
+      setPendingAnalysis(false);
+      setAnalysisId(Date.now().toString());setAnalysis(null);setPage('results');
+    }
+  };
+  const handleVerified=()=>{
+    const updated={...user,emailVerified:true};
+    setUser(updated);setSession(updated);setShowVerifyWall(false);
+    if(pendingAnalysis&&algoResult){
+      setPendingAnalysis(false);
+      setAnalysisId(Date.now().toString());setAnalysis(null);setPage('results');
+    }
+  };
+  const logout=()=>{clearSession();setUser(null);setShowVerifyWall(false);setPendingAnalysis(false);};
 
   return(
     <div style={{minHeight:'100vh',background:C.bg}}>
       <style>{globalCSS}</style>
-      {showAuthModal&&<AuthModal onAuth={u=>{setUser(u);setShowAuthModal(false);}} onClose={()=>setShowAuthModal(false)} reason={authReason}/>}
+      {showAuthModal&&<AuthModal onAuth={handleAuth} onClose={()=>{setShowAuthModal(false);setPendingAnalysis(false);}} reason={authReason}/>}
       <Navbar page={page} setPage={p=>{if(p!=='results')setViewReport(null);setPage(p);}} user={user} onLogout={logout} showAuth={()=>showAuth()}/>
+      {showVerifyWall
+        ?<EmailVerificationWall email={user?.email} onVerified={handleVerified} onLogout={()=>{logout();setShowVerifyWall(false);}}/>
+        :<>
       {page==='home'    &&<HomePage setPage={setPage} showAuth={showAuth} user={user}/>}
       {page==='analyze' &&<AnalyzePage form={form} setForm={setForm} file={file} handleFile={handleFile} loading={loading} loadingMsg={loadingMsg} analyzeResume={analyzeResume} error={error}/>}
       {page==='results' &&<ResultsPage analysis={activeAnalysis} algoResult={activeAlgo} form={activeForm} saveAnalysis={saveAnalysis} setPage={setPage} user={user} analysisId={activeId} showAuth={showAuth}/>}
@@ -852,6 +996,7 @@ export default function App(){
       {page==='blog-admin'&&isAdmin(user)&&<BlogAdmin/>}
       {page==='about'   &&<AboutPage setPage={setPage}/>}
       {page==='reports' &&user&&<ReportsPage userId={user.id} setPage={setPage} setViewReport={setViewReport}/>}
+      </>}
       <Footer setPage={setPage}/>
     </div>
   );
