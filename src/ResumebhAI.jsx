@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import * as mammoth from "mammoth";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const RAZORPAY_KEY  = import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_XXXXXXXXXXXXXXXX";
@@ -1034,7 +1033,8 @@ export default function App(){
     } else {
       try{
         const ab=await f.arrayBuffer();
-        const res=await mammoth.extractRawText({arrayBuffer:ab});
+        const mammothLib=await import('mammoth');
+        const res=await mammothLib.extractRawText({arrayBuffer:ab});
         const chk=isLikelyResume(res.value);
         if(!chk.ok){setError('🚫 '+chk.reason);setFile(null);return;}
         setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));setPreviewText(res.value);
