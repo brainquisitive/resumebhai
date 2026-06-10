@@ -214,6 +214,7 @@ const loadFirebase = async () => {
 };
 const signInWithGoogle = async () => {
   if(!FB_READY) throw new Error('Configure Firebase to enable Google Sign-In.');
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
@@ -222,6 +223,7 @@ const signInWithGoogle = async () => {
   return {id:result.user.uid,name:result.user.displayName,email:result.user.email,photo:result.user.photoURL,emailVerified:result.user.emailVerified};
 };
 const firebaseRegister = async (name,email,password) => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
@@ -231,6 +233,7 @@ const firebaseRegister = async (name,email,password) => {
   return {id:result.user.uid,name,email:result.user.email,emailVerified:false,photo:null};
 };
 const firebaseLogin = async (email,password) => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
@@ -238,12 +241,14 @@ const firebaseLogin = async (email,password) => {
   return {id:result.user.uid,name:result.user.displayName||email.split('@')[0],email:result.user.email,emailVerified:result.user.emailVerified,photo:null};
 };
 const firebaseSendVerification = async () => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
   if(auth.currentUser) await auth.currentUser.sendEmailVerification();
 };
 const firebaseCheckVerified = async () => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
@@ -391,6 +396,7 @@ function AuthModal({onAuth,onClose,reason}){
     setLoading(true);setErr('');
     if(FB_READY){
       try{
+        await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
         await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
         if(!window.firebase.apps.length)window.firebase.initializeApp(FB_CONFIG);
         const auth=window.firebase.auth();
