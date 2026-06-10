@@ -266,6 +266,34 @@ const DB = {
   async deletePost(id){ const db=await loadFirebase(); if(db) await db.collection('blogs').doc(id).delete(); else { const l=JSON.parse(localStorage.getItem('rbhai_blogs')||'[]');localStorage.setItem('rbhai_blogs',JSON.stringify(l.filter(x=>x.id!==id))); } },
   async loadPosts(){ const db=await loadFirebase(); if(db){const snap=await db.collection('blogs').orderBy('date','desc').get();return snap.docs.map(d=>d.data());} return JSON.parse(localStorage.getItem('rbhai_blogs')||'[]'); },
   async storeUser(user){ const db=await loadFirebase(); if(db) await db.collection('users').doc(String(user.id)).set({email:user.email,name:user.name||'',provider:user.photo?'google':'email',emailVerified:user.emailVerified||false,createdAt:new Date().toISOString()},{merge:true}); },
+  async saveVault(userId,entry){
+    const db=await loadFirebase();
+    if(db) await db.collection('vaults').doc(`${userId}_${entry.id}`).set({...entry,userId});
+    else { const k=`rbhai_vault_${userId}`;const list=JSON.parse(localStorage.getItem(k)||'[]');localStorage.setItem(k,JSON.stringify([entry,...list.filter(x=>x.id!==entry.id)])); }
+  },
+  async loadVaults(userId){
+    const db=await loadFirebase();
+    let list;
+    if(db){const snap=await db.collection('vaults').where('userId','==',userId).get();list=snap.docs.map(d=>d.data());}
+    else list=JSON.parse(localStorage.getItem(`rbhai_vault_${userId}`)||'[]');
+    const now=Date.now();
+    const valid=list.filter(v=>now-v.createdAt<7*24*60*60*1000);
+    if(valid.length!==list.length){
+      if(db){for(const v of list){if(now-v.createdAt>=7*24*60*60*1000) await db.collection('vaults').doc(`${userId}_${v.id}`).delete();}}
+      else localStorage.setItem(`rbhai_vault_${userId}`,JSON.stringify(valid));
+    }
+    return valid.sort((a,b)=>b.createdAt-a.createdAt);
+  },
+  async renameVault(userId,id,name){
+    const db=await loadFirebase();
+    if(db) await db.collection('vaults').doc(`${userId}_${id}`).update({name});
+    else { const k=`rbhai_vault_${userId}`;const list=JSON.parse(localStorage.getItem(k)||'[]');const i=list.findIndex(x=>x.id===id);if(i>=0){list[i].name=name;localStorage.setItem(k,JSON.stringify(list));} }
+  },
+  async deleteVault(userId,id){
+    const db=await loadFirebase();
+    if(db) await db.collection('vaults').doc(`${userId}_${id}`).delete();
+    else { const k=`rbhai_vault_${userId}`;const list=JSON.parse(localStorage.getItem(k)||'[]');localStorage.setItem(k,JSON.stringify(list.filter(x=>x.id!==id))); }
+  },
 };
 
 // ─── Auth storage ─────────────────────────────────────────────────────────────
@@ -563,8 +591,9 @@ function HomePage({setPage,showAuth,user}){
 }
 
 // ─── ANALYZE PAGE ─────────────────────────────────────────────────────────────
-function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeResume,error}){
+function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeResume,error,previewText}){
   const dropRef=useRef(null);const fileRef=useRef(null);
+  const [showPreview,setShowPreview]=useState(false);
   const isWord=file&&(file.name.endsWith('.doc')||file.name.endsWith('.docx'));
   const onDrop=useCallback(e=>{e.preventDefault();dropRef.current?.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)handleFile(f);},[handleFile]);
   return(
@@ -590,6 +619,12 @@ function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeRes
               <p style={{fontSize:13,color:C.muted,fontFamily:FONT}}>{file?'Click to change file':'PDF or Word (.doc / .docx) supported'}</p>
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" style={{display:'none'}} onChange={e=>handleFile(e.target.files[0])}/>
             </div>
+            {file&&previewText&&(
+              <div style={{marginTop:12}}>
+                <button onClick={()=>setShowPreview(p=>!p)} className="btn-secondary" style={{padding:'8px 16px',fontSize:13}}>{showPreview?'▲ Hide Preview':'👁 Preview Extracted Text'}</button>
+                {showPreview&&<div style={{marginTop:10,background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:10,padding:16,maxHeight:260,overflowY:'auto',fontSize:13,color:C.text,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:"'Courier New',monospace"}}>{previewText}</div>}
+              </div>
+            )}
             <div style={{marginTop:12,background:'#EEF5FF',borderRadius:8,padding:'10px 14px',fontSize:13,color:C.primary,fontFamily:FONT}}>
               💼 <b>LinkedIn user?</b> Go to your profile → <b>More → Save to PDF</b> → upload that file here
             </div>
@@ -640,7 +675,13 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
       const sys3=`Expert interview coach. Return ONLY JSON:\n{"interviewQuestions":[{"q":"question","a":"3-4 sentence answer","tip":"key tip"},...12 items]}\nCandidate:\n${ctx}`;
       const [r1,r2,r3]=await Promise.all([callAPI(sys1,[{type:'text',text:'Generate JSON.'}],5000),callAPI(sys2,[{type:'text',text:'Create visual HTML resume.'}],5000),callAPI(sys3,[{type:'text',text:'Generate interview questions JSON.'}],3000)]);
       const p1=JSON.parse(r1);const htmlStart=r2.indexOf('<!DOCTYPE');const p3=JSON.parse(r3);
-      setProContent({...p1,visualResumeHTML:htmlStart>=0?r2.slice(htmlStart):r2,...p3});
+      const visualResumeHTML=htmlStart>=0?r2.slice(htmlStart):r2;
+      setProContent({...p1,visualResumeHTML,...p3});
+      setPayErr('');
+      if(user){
+        const entry={id:analysisId||Date.now().toString(),createdAt:Date.now(),date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),name:form.targetRole?`${form.targetRole} Career Pack`:'Career Pack',files:{...p1,visualResumeHTML,...p3}};
+        try{await DB.saveVault(user.id,entry);}catch{}
+      }
     }catch(e){setPayErr('Generation failed: '+e.message);}
     finally{clearInterval(iv);setProLoading(false);}
   };
@@ -750,7 +791,14 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
       ):(
         <div className="card" style={{padding:28,textAlign:'center'}}>
           <p style={{color:C.muted,marginBottom:14,fontFamily:FONT}}>Your pack is paid. Click to generate.</p>
+          {payErr&&<p style={{fontSize:13,color:C.danger,marginBottom:14,fontFamily:FONT}}>⚠️ {payErr}</p>}
           <button onClick={generateProContent} className="btn-gold" style={{padding:'12px 28px',fontSize:14}}>Generate My Career Pack →</button>
+        </div>
+      )}
+      {paid&&proContent&&(
+        <div style={{marginTop:16,background:'#EEF5FF',border:`1px solid ${C.border}`,borderRadius:10,padding:'12px 16px',fontSize:13,color:C.primary,fontFamily:FONT,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+          <span>📁 {user?'Your files are saved to':'Sign in to save these to'} <b>My Saved Reports</b> for <b>7 days</b>{user?' — rename or download anytime.':'.'}</span>
+          {user&&<button onClick={()=>setPage('reports')} className="btn-secondary" style={{padding:'7px 16px',fontSize:12,whiteSpace:'nowrap'}}>View My Reports →</button>}
         </div>
       )}
     </div>
@@ -758,14 +806,70 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
 }
 
 // ─── MY REPORTS ───────────────────────────────────────────────────────────────
+function VaultFolder({entry,userId,onRename,onDelete}){
+  const [editing,setEditing]=useState(false);
+  const [name,setName]=useState(entry.name||'Career Pack');
+  const msLeft=entry.createdAt+7*24*60*60*1000-Date.now();
+  const daysLeft=Math.max(0,Math.ceil(msLeft/(24*60*60*1000)));
+  const f=entry.files||{};
+  const save=()=>{setEditing(false);if(name.trim()&&name!==entry.name){onRename(entry.id,name.trim());}};
+  const downloadCover=()=>{
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:12pt;max-width:700px;margin:0 auto;padding:40px;line-height:1.85}@media print{@page{margin:20mm;size:A4}}</style></head><body>${(f.coverLetter||'').split('\n').map(l=>`<p>${l||'&nbsp;'}</p>`).join('')}</body></html>`;
+    printAsPDF(html);
+  };
+  return(
+    <div className="card" style={{padding:'20px 24px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap',marginBottom:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:200}}>
+          <span style={{fontSize:22}}>📁</span>
+          {editing?(
+            <input autoFocus value={name} onChange={e=>setName(e.target.value)} onBlur={save} onKeyDown={e=>e.key==='Enter'&&save()} style={{padding:'6px 10px',fontSize:15,fontWeight:700,maxWidth:280}}/>
+          ):(
+            <div>
+              <p style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text,display:'flex',alignItems:'center',gap:8}}>{name}<button onClick={()=>setEditing(true)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:C.muted}}>✏️ Rename</button></p>
+              <p style={{fontFamily:FONT,fontSize:12,color:C.muted}}>{entry.date}</p>
+            </div>
+          )}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span className="tag" style={{background:daysLeft<=2?'#FFF0EC':'#FEF9EC',color:daysLeft<=2?'#C73800':'#92600A'}}>{daysLeft<=0?'Expires today':`Expires in ${daysLeft} day${daysLeft===1?'':'s'}`}</span>
+          <button onClick={()=>onDelete(entry.id)} style={{padding:'6px 12px',fontSize:12,borderRadius:9,border:'none',background:'#FFF0EC',color:C.danger,cursor:'pointer',fontFamily:FONT,fontWeight:700}}>Delete</button>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+        {f.atsResume&&<button onClick={()=>dlAtsPDF(f.atsResume)} className="btn-secondary" style={{padding:'8px 14px',fontSize:12}}>🤖 ATS Resume</button>}
+        {f.visualResumeHTML&&<button onClick={()=>dlVisualPDF(f.visualResumeHTML)} className="btn-secondary" style={{padding:'8px 14px',fontSize:12}}>🎨 Visual Resume</button>}
+        {f.coverLetter&&<button onClick={downloadCover} className="btn-secondary" style={{padding:'8px 14px',fontSize:12}}>✉️ Cover Letter</button>}
+        {f.linkedinAbout&&<button onClick={()=>navigator.clipboard.writeText(`Headline: ${f.linkedinHeadline}\n\nAbout:\n${f.linkedinAbout}\n\nNaukri Headline: ${f.naukriHeadline}\n\nNaukri Summary:\n${f.naukriSummary}`)} className="btn-secondary" style={{padding:'8px 14px',fontSize:12}}>💼 Copy LinkedIn & Naukri</button>}
+        {f.interviewQuestions&&<button onClick={()=>navigator.clipboard.writeText(f.interviewQuestions.map((q,i)=>`Q${i+1}: ${q.q}\nA: ${q.a}\nTip: ${q.tip}`).join('\n\n'))} className="btn-secondary" style={{padding:'8px 14px',fontSize:12}}>🎯 Copy Interview Prep</button>}
+      </div>
+    </div>
+  );
+}
+
 function ReportsPage({userId,setPage,setViewReport}){
   const [reports,setReports]=useState([]);const [loading,setLoading]=useState(true);
-  useEffect(()=>{DB.loadAnalyses(userId).then(r=>{setReports(r);setLoading(false);});},[userId]);
+  const [vaults,setVaults]=useState([]);
+  useEffect(()=>{
+    DB.loadAnalyses(userId).then(r=>{setReports(r);setLoading(false);});
+    DB.loadVaults(userId).then(setVaults);
+  },[userId]);
+  const renameVault=async(id,name)=>{await DB.renameVault(userId,id,name);setVaults(v=>v.map(x=>x.id===id?{...x,name}:x));};
+  const deleteVault=async(id)=>{await DB.deleteVault(userId,id);setVaults(v=>v.filter(x=>x.id!==id));};
   return(
     <div style={{maxWidth:820,margin:'0 auto',padding:'50px clamp(16px,4vw,32px)'}}>
       <button onClick={()=>setPage('home')} className="btn-secondary" style={{padding:'8px 16px',fontSize:13,marginBottom:26}}>← Back</button>
       <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,marginBottom:8}}>My Saved Reports</h2>
       <p style={{fontSize:14,color:C.muted,marginBottom:28,fontFamily:FONT}}>{FB_READY?'Synced across all your devices':'Saved on this device · Add Firebase config for cross-device sync'}</p>
+
+      <h3 style={{fontFamily:FONT,fontWeight:700,fontSize:18,color:C.text,marginBottom:6}}>📁 Career Pack Files</h3>
+      <p style={{fontSize:13,color:C.muted,marginBottom:14,fontFamily:FONT}}>Each unlocked Career Pack is saved here for 7 days. Rename or download anytime before it expires.</p>
+      {vaults.length===0?<div className="card" style={{padding:'24px',textAlign:'center',marginBottom:32}}><p style={{fontFamily:FONT,fontSize:14,color:C.muted}}>No Career Pack files yet. Unlock a Career Pack from your results to see them here.</p></div>:
+      <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:32}}>
+        {vaults.map(v=><VaultFolder key={v.id} entry={v} userId={userId} onRename={renameVault} onDelete={deleteVault}/>)}
+      </div>}
+
+      <h3 style={{fontFamily:FONT,fontWeight:700,fontSize:18,color:C.text,marginBottom:14}}>📋 Analysis Reports</h3>
       {loading?<div style={{textAlign:'center',padding:60}}><Spinner size={32} color={C.primary}/></div>:
       reports.length===0?<div className="card" style={{padding:44,textAlign:'center'}}><div style={{fontSize:44,marginBottom:14}}>📋</div><p style={{fontFamily:FONT,fontSize:15,color:C.muted}}>No saved reports yet. Analyse a resume and click "Save Report".</p></div>:
       <div style={{display:'flex',flexDirection:'column',gap:14}}>
@@ -896,6 +1000,7 @@ export default function App(){
   const [file,setFile]=useState(null);
   const [b64,setB64]=useState(null);
   const [fileText,setFileText]=useState(null);
+  const [previewText,setPreviewText]=useState('');
   const [form,setForm]=useState({industry:'',targetRole:'',seniority:'',experience:'',jobDescription:''});
   const [loading,setLoading]=useState(false);
   const [loadingMsg,setLoadingMsg]=useState('');
@@ -912,7 +1017,7 @@ export default function App(){
   const showAuth=(reason='')=>{setAuthReason(reason);setShowAuthModal(true);};
 
   const handleFile=useCallback(async f=>{
-    if(!f)return; setFile(f); setError(''); setAlgoResult(null);
+    if(!f)return; setFile(f); setError(''); setAlgoResult(null); setPreviewText('');
     const isPDF=f.type==='application/pdf'||f.name.endsWith('.pdf');
     if(isPDF){
       const r=new FileReader();
@@ -922,7 +1027,7 @@ export default function App(){
           const t=await extractPDFText(b);
           const chk=isLikelyResume(t);
           if(!chk.ok){setError('🚫 '+chk.reason);setFile(null);setB64(null);return;}
-          setB64(b);setFileText(null);setAlgoResult(runAlgorithmicAnalysis(t));
+          setB64(b);setFileText(null);setAlgoResult(runAlgorithmicAnalysis(t));setPreviewText(t);
         }catch{setError('Could not read PDF. Try a different file.');setFile(null);}
       };
       r.readAsDataURL(f);
@@ -932,7 +1037,7 @@ export default function App(){
         const res=await mammoth.extractRawText({arrayBuffer:ab});
         const chk=isLikelyResume(res.value);
         if(!chk.ok){setError('🚫 '+chk.reason);setFile(null);return;}
-        setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));
+        setFileText(res.value);setB64(null);setAlgoResult(runAlgorithmicAnalysis(res.value));setPreviewText(res.value);
       }
       catch{setError('Could not read Word file. Try saving as PDF.');setFile(null);}
     }
@@ -990,7 +1095,7 @@ export default function App(){
         ?<EmailVerificationWall email={user?.email} onVerified={handleVerified} onLogout={()=>{logout();setShowVerifyWall(false);}}/>
         :<>
       {page==='home'    &&<HomePage setPage={setPage} showAuth={showAuth} user={user}/>}
-      {page==='analyze' &&<AnalyzePage form={form} setForm={setForm} file={file} handleFile={handleFile} loading={loading} loadingMsg={loadingMsg} analyzeResume={analyzeResume} error={error}/>}
+      {page==='analyze' &&<AnalyzePage form={form} setForm={setForm} file={file} handleFile={handleFile} loading={loading} loadingMsg={loadingMsg} analyzeResume={analyzeResume} error={error} previewText={previewText}/>}
       {page==='results' &&<ResultsPage analysis={activeAnalysis} algoResult={activeAlgo} form={activeForm} saveAnalysis={saveAnalysis} setPage={setPage} user={user} analysisId={activeId} showAuth={showAuth}/>}
       {page==='blog'    &&<BlogPage user={user}/>}
       {page==='blog-admin'&&isAdmin(user)&&<BlogAdmin/>}
