@@ -530,7 +530,7 @@ function Footer({setPage}){
     <footer style={{background:C.text,color:'rgba(255,255,255,.65)',padding:'44px clamp(16px,5vw,56px)',display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:40}}>
       <div><div style={{marginBottom:14}}><Logo size="sm" light/></div><p style={{fontSize:13,lineHeight:1.7,maxWidth:260,color:'rgba(255,255,255,.55)',fontFamily:FONT}}>AI-powered resume analysis for the Indian job market. Free instant analysis · ₹199 career pack · No subscription.</p></div>
       <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Pages</p>{['Home','Analyze','Blog','About'].map(n=><div key={n} onClick={()=>setPage(n.toLowerCase())} style={{fontSize:13,marginBottom:9,cursor:'pointer',fontFamily:FONT}} onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.65)'}>{n}</div>)}</div>
-      <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Resources</p>{['ATS Guide','Resume Tips','Career Blog','Templates'].map(n=><div key={n} style={{fontSize:13,marginBottom:9,fontFamily:FONT}}>{n}</div>)}</div>
+      <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Resources</p>{[['ATS Guide','blog'],['Resume Tips','blog'],['Career Blog','blog'],['Free Resume Check','analyze']].map(([n,p])=><div key={n} onClick={()=>setPage(p)} style={{fontSize:13,marginBottom:9,cursor:'pointer',fontFamily:FONT}} onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.65)'}>{n}</div>)}</div>
     </footer>
   );
 }
@@ -563,11 +563,25 @@ function HomePage({setPage,showAuth,user}){
         <div style={{maxWidth:960,margin:'0 auto'}}>
           <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>What gets checked</h2>
           <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:40,fontFamily:FONT}}>8 checks are free instantly · 6 AI-powered features for ₹199</p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))',gap:10}}>
-            {checks.map(c=><div key={c.label} style={{padding:'14px 16px',borderRadius:12,border:`1px solid ${c.free?C.teal+'44':C.gold+'55'}`,background:c.free?'#F0FBF7':'#FFFBF0',display:'flex',alignItems:'center',gap:10}}>
-              <span style={{fontSize:18}}>{c.icon}</span>
-              <div><p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text,marginBottom:2}}>{c.label}</p><Tag text={c.free?'Free':'₹199'} variant={c.free?'free':'paid'}/></div>
-            </div>)}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:24}}>
+            <div>
+              <div style={{textAlign:'center',marginBottom:14}}><Tag text="Free — Instant" variant="free"/></div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {checks.filter(c=>c.free).map(c=><div key={c.label} style={{padding:'14px 16px',borderRadius:12,border:`1px solid ${C.teal}44`,background:'#F0FBF7',display:'flex',alignItems:'center',gap:10}}>
+                  <span style={{fontSize:18}}>{c.icon}</span>
+                  <p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{c.label}</p>
+                </div>)}
+              </div>
+            </div>
+            <div>
+              <div style={{textAlign:'center',marginBottom:14}}><Tag text="₹199 — AI Career Pack" variant="paid"/></div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {checks.filter(c=>!c.free).map(c=><div key={c.label} style={{padding:'14px 16px',borderRadius:12,border:`1px solid ${C.gold}55`,background:'#FFFBF0',display:'flex',alignItems:'center',gap:10}}>
+                  <span style={{fontSize:18}}>{c.icon}</span>
+                  <p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{c.label}</p>
+                </div>)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -649,12 +663,13 @@ function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeRes
             </div>
           </div>
           <div className="card" style={{padding:28,marginBottom:20}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><span style={{fontSize:20}}>🎯</span><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text}}>Your Target</h3><span style={{fontSize:12,color:C.muted,fontFamily:FONT}}>Helps tailor the AI career pack (optional for free analysis)</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><span style={{fontSize:20}}>🎯</span><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text}}>Your Target</h3><span style={{fontSize:12,color:C.muted,fontFamily:FONT}}>Required — helps tailor your analysis and AI career pack</span></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-              {[{key:'industry',label:'Industry',ph:'e.g. Construction, Finance, IT'},{key:'targetRole',label:'Target Role',ph:'e.g. Project Manager'},{key:'seniority',label:'Seniority',ph:'e.g. Senior, Mid, Junior'},{key:'experience',label:'Years of Experience',ph:'e.g. 8',type:'number'}].map(f=><div key={f.key}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{f.label}</label><input type={f.type||'text'} value={form[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{padding:'10px 12px'}}/></div>)}
+              {[{key:'industry',label:'Industry *',ph:'e.g. Construction, Finance, IT'},{key:'targetRole',label:'Target Role *',ph:'e.g. Project Manager'},{key:'experience',label:'Years of Experience *',ph:'e.g. 8',type:'number'}].map(f=><div key={f.key}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{f.label}</label><input type={f.type||'text'} value={form[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{padding:'10px 12px'}}/></div>)}
             </div>
-            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description (Optional — improves AI career pack)</label>
-            <textarea value={form.jobDescription} onChange={e=>setForm(p=>({...p,jobDescription:e.target.value}))} placeholder="Paste the job description for targeted keyword matching and cover letter…" rows={3} style={{padding:'10px 12px',resize:'vertical'}}/>
+            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description * (at least 50 words — improves AI career pack)</label>
+            <textarea value={form.jobDescription} onChange={e=>setForm(p=>({...p,jobDescription:e.target.value}))} placeholder="Paste the job description for targeted keyword matching and cover letter… (minimum 50 words)" rows={4} style={{padding:'10px 12px',resize:'vertical'}}/>
+            <p style={{fontSize:12,color:form.jobDescription.trim().split(/\s+/).filter(Boolean).length>=50?'#0A7D5A':C.muted,marginTop:5,fontFamily:FONT}}>{form.jobDescription.trim().split(/\s+/).filter(Boolean).length} / 50 words minimum</p>
           </div>
           {error&&<div style={{background:'#FFF0EC',border:'1px solid #FFCBB8',borderRadius:10,padding:'12px 16px',fontSize:14,color:'#C73800',marginBottom:16,fontFamily:FONT}}>⚠️ {error}</div>}
           <button onClick={analyzeResume} className="btn-primary" style={{width:'100%',padding:'18px',fontSize:17,borderRadius:14}}>🔍 Analyse My Resume Free</button>
@@ -687,7 +702,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
     const msgs=['Writing your ATS resume…','Crafting cover letter…','Building LinkedIn & Naukri content…','Generating interview questions…'];
     let mi=0;setProMsg(msgs[0]);const iv=setInterval(()=>{mi=(mi+1)%msgs.length;setProMsg(msgs[mi]);},2500);
     try{
-      const ctx=`Name:${analysis?.candidateInfo?.name||'Candidate'}\nRole:${analysis?.candidateInfo?.currentRole||''}\nTarget:${form.targetRole||'Not specified'}\nIndustry:${form.industry||'Not specified'}\nSeniority:${form.seniority||'Mid'}\nExperience:${form.experience||''} yrs${form.jobDescription?`\nJD:\n${form.jobDescription.slice(0,500)}`:''}`;
+      const ctx=`Name:${analysis?.candidateInfo?.name||'Candidate'}\nRole:${analysis?.candidateInfo?.currentRole||''}\nTarget:${form.targetRole||'Not specified'}\nIndustry:${form.industry||'Not specified'}\nExperience:${form.experience||''} yrs${form.jobDescription?`\nJD:\n${form.jobDescription.slice(0,500)}`:''}`;
       const resumeCtx = analysis?.atsResume||'';
       const sys1=`Elite resume expert. Return ONLY JSON:\n{"missingKeywords":["10-12 role-specific keywords"],"atsResume":"<FULL plain-text ATS resume with all sections, keyword-rich, \\n for newlines, ASCII only>","coverLetter":"<4-para cover letter>","linkedinHeadline":"<120 chars>","linkedinAbout":"<3 paragraphs>","naukriHeadline":"<100 chars>","naukriSummary":"<150-200 words>"}\nCandidate:\n${ctx}\nExisting resume:\n${resumeCtx}`;
       const sys2=`Expert resume designer. Return ONLY complete <!DOCTYPE html> visual resume. Modern navy header, all sections, inline CSS, A4 width. Candidate:\n${ctx}`;
@@ -719,7 +734,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
     <div style={{maxWidth:980,margin:'0 auto',padding:'40px clamp(16px,4vw,32px)'}}>
       {/* Header */}
       <div style={{background:'linear-gradient(135deg,#4361EE,#7B2FBE)',borderRadius:22,padding:'28px 36px',marginBottom:24,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16,color:'#fff'}}>
-        <div><p style={{fontSize:12,opacity:.75,marginBottom:4,letterSpacing:'1px',textTransform:'uppercase',fontFamily:FONT}}>Analysis Complete</p><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:24,marginBottom:4}}>{form.targetRole||'Your Resume'}</h2><p style={{fontSize:14,opacity:.85,fontFamily:FONT}}>{form.industry||''}{form.seniority?` · ${form.seniority}`:''}</p></div>
+        <div><p style={{fontSize:12,opacity:.75,marginBottom:4,letterSpacing:'1px',textTransform:'uppercase',fontFamily:FONT}}>Analysis Complete</p><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:24,marginBottom:4}}>{form.targetRole||'Your Resume'}</h2><p style={{fontSize:14,opacity:.85,fontFamily:FONT}}>{form.industry||''}{form.experience?` · ${form.experience} yrs exp`:''}</p></div>
         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
           {user?<button onClick={saveAnalysis} style={{padding:'9px 18px',borderRadius:10,border:'2px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:FONT}}>💾 Save Report</button>:<button onClick={()=>showAuth('Sign in to save your report and access it from any device')} style={{padding:'9px 18px',borderRadius:10,border:'2px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:FONT}}>💾 Save Report</button>}
           <button onClick={()=>setPage('analyze')} style={{padding:'9px 18px',borderRadius:10,border:'none',background:'rgba(255,255,255,.2)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:FONT}}>+ New Analysis</button>
@@ -1068,7 +1083,7 @@ export default function App(){
   const [b64,setB64]=useState(null);
   const [fileText,setFileText]=useState(null);
   const [previewText,setPreviewText]=useState('');
-  const [form,setForm]=useState({industry:'',targetRole:'',seniority:'',experience:'',jobDescription:''});
+  const [form,setForm]=useState({industry:'',targetRole:'',experience:'',jobDescription:''});
   const [loading,setLoading]=useState(false);
   const [loadingMsg,setLoadingMsg]=useState('');
   const [algoResult,setAlgoResult]=useState(null);
@@ -1114,6 +1129,8 @@ export default function App(){
   const analyzeResume=async()=>{
     if(!b64&&!fileText){setError('Please upload a resume file.');return;}
     if(!algoResult){setError('Could not extract text from this file. Try a different file.');return;}
+    if(!form.industry.trim()||!form.targetRole.trim()||!String(form.experience).trim()){setError('Please fill in Industry, Target Role, and Years of Experience.');return;}
+    if(form.jobDescription.trim().split(/\s+/).filter(Boolean).length<50){setError('Please paste a Job Description of at least 50 words.');return;}
     if(!user){
       setPendingAnalysis(true);
       showAuth('Create a free account to see your resume analysis');
