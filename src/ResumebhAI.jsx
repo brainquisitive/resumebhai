@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { SEED_BLOG_POSTS } from "./blogSeedPosts";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const RAZORPAY_KEY  = import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_XXXXXXXXXXXXXXXX";
@@ -56,6 +57,16 @@ input:focus,textarea:focus,select:focus{border-color:${C.primary};background:#ff
 .skel{background:linear-gradient(90deg,#eef1fa 25%,#e0e5f7 50%,#eef1fa 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
 .check-row{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid ${C.border}}
 .check-row:last-child{border-bottom:none}
+.blog-body h3{font-family:Arial,sans-serif;font-weight:800;font-size:21px;color:${C.text};margin:28px 0 12px;line-height:1.3}
+.blog-body h4{font-family:Arial,sans-serif;font-weight:700;font-size:16px;color:${C.text};margin:20px 0 8px;line-height:1.3}
+.blog-body p{margin:0 0 16px}
+.blog-body ul,.blog-body ol{margin:0 0 16px;padding-left:24px}
+.blog-body li{margin-bottom:8px;line-height:1.7}
+.blog-body blockquote{border-left:4px solid ${C.primary};padding-left:18px;margin:20px 0;font-style:italic;color:${C.muted}}
+.blog-body img{max-width:100%;border-radius:12px;margin:16px 0;display:block}
+.blog-body a{color:${C.primary};font-weight:700}
+.blog-body code{background:#F0F3FF;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:13px}
+.blog-body strong{font-weight:800}
 `;
 
 // ─── ALGORITHMIC ANALYSIS ─────────────────────────────────────────────────────
@@ -892,28 +903,40 @@ function ReportsPage({userId,setPage,setViewReport}){
 
 // ─── BLOG PAGE ────────────────────────────────────────────────────────────────
 const DEFAULT_POSTS=[
+  ...SEED_BLOG_POSTS,
   {id:'d1',tag:'ATS Strategy',title:'How to Beat ATS Systems in 2025',subheading:'ATS filters reject up to 75% of resumes before a human sees them.',imageUrl:'https://picsum.photos/seed/ats2025/800/420',quote:'An ATS doesn\'t appreciate creativity — it rewards precision.',author:'ResumebhAI Team',date:'March 10, 2025',read:'8 min',body:`ATS systems scan for specific keywords, formatting patterns, and structural elements. The single biggest mistake candidates make is submitting beautifully designed resumes with columns, tables, and graphics — all of which ATS systems cannot read correctly.\n\nThe most critical ATS optimisation rules:\n\n1. Use a single-column layout with clear section headings\n2. Mirror the exact language from the job description\n3. Spell out abbreviations the first time: "Search Engine Optimisation (SEO)"\n4. Use standard fonts like Arial or Calibri\n5. Save as .docx or plain PDF — not a scanned image\n6. Include a dedicated Skills section with your core competencies listed clearly\n\nOnce you pass the ATS, your resume reaches a recruiter who has roughly 7 seconds to decide whether to read further. Make those 7 seconds count with a strong summary and quantified achievements in every bullet point.`},
   {id:'d2',tag:'Writing Tips',title:'5 Resume Summary Formulas That Get Callbacks',subheading:'Your summary is the first — and sometimes only — thing recruiters read.',imageUrl:'https://picsum.photos/seed/summaryformula/800/420',quote:'Replace every generic word with a specific one. Include at least one number.',author:'ResumebhAI Team',date:'February 22, 2025',read:'6 min',body:`Formula 1 — The Specialist:\n"[X]-year [Title] specialising in [niche], with a track record of [achievement]."\n\nFormula 2 — The Problem Solver:\n"[Title] who has helped [company type] achieve [result] by [method]."\n\nFormula 3 — The Career Changer:\n"Former [role] transitioning to [new role], bringing [transferable skills]."\n\nFormula 4 — The Leader:\n"Senior [Title] with [X] years leading [team type] to deliver [outcome]."\n\nFormula 5 — The Numbers Person:\n"[Title] with proven ROI: [achievement 1], [achievement 2], [achievement 3]."\n\nThe key: specificity. Include at least one number in every summary.`},
   {id:'d3',tag:'Indian Job Market',title:'Naukri vs LinkedIn: Which Matters More in India?',subheading:'Most Indian professionals use both but optimise for neither.',imageUrl:'https://picsum.photos/seed/naukrivlinkedin/800/420',quote:'Your Naukri headline is the most keyword-indexed field on the platform.',author:'ResumebhAI Team',date:'January 20, 2025',read:'6 min',body:`Naukri.com has over 75 million registered profiles and is where the majority of Indian mid-market hiring happens. Recruiters at TCS, Infosys, L&T, and HDFC run active searches on Naukri daily.\n\nNaukri's ranking algorithm is keyword-driven. Your headline and summary are the most heavily indexed fields.\n\nLinkedIn matters more for senior roles (VP+), startup hiring, and international companies.\n\nPractical strategy:\n- 0–8 years, Indian companies: Naukri first, LinkedIn second\n- 8+ years or MNCs: LinkedIn first, Naukri maintained\n\nThe worst mistake: an outdated Naukri profile. Recruiters filter by "last updated" date.`},
   {id:'d4',tag:'Keywords',title:'Power Words That Make Recruiters Notice You',subheading:'"Managed" and "led" are invisible. These verbs land with real impact.',imageUrl:'https://picsum.photos/seed/powerwords/800/420',quote:'The formula: [Strong Verb] + [What You Did] + [How] + [Quantified Result]',author:'ResumebhAI Team',date:'January 2, 2025',read:'7 min',body:`Leadership: Orchestrated, Championed, Spearheaded, Galvanised\nBuilding: Engineered, Architected, Launched, Pioneered\nImprovement: Streamlined, Overhauled, Revamped, Optimised\nGrowth: Scaled, Accelerated, Amplified, Drove\nAnalysis: Synthesised, Diagnosed, Evaluated, Forecasted\n\nWeak: "Managed social media and increased engagement"\nStrong: "Orchestrated a 4-platform strategy driving 340% organic growth and ₹85L in attributed pipeline within 6 months"`},
 ];
 
-function BlogPage({user}){
+function PostImage({src,alt,height}){
+  if(!src) return <div style={{width:'100%',height,background:`linear-gradient(135deg,${C.primary}22,${C.purple}22)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:C.muted,fontFamily:FONT}}>📷 Image coming soon</div>;
+  return <img src={src} alt={alt} style={{width:'100%',height,objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>;
+}
+
+function BlogPage({user,setPage}){
   const [posts,setPosts]=useState(DEFAULT_POSTS);const [post,setPost]=useState(null);
-  useEffect(()=>{DB.loadPosts().then(db=>{if(db.length>0)setPosts([...db,...DEFAULT_POSTS]);});},[]);
+  useEffect(()=>{DB.loadPosts().then(db=>{if(db.length>0){const ids=new Set(db.map(p=>p.id));setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id))]);}});},[]);
   const featured=posts[0];const rest=posts.slice(1);
   return(
     <div style={{maxWidth:1060,margin:'0 auto',padding:'50px clamp(16px,4vw,32px)'}}>
       {post?(
         <div className="fade-up">
           <button onClick={()=>setPost(null)} className="btn-secondary" style={{padding:'8px 16px',fontSize:13,marginBottom:26}}>← Back to Blog</button>
-          <img src={post.imageUrl} alt={post.title} style={{width:'100%',height:340,objectFit:'cover',borderRadius:16,marginBottom:24}} onError={e=>e.target.style.display='none'}/>
+          <div style={{borderRadius:16,overflow:'hidden',marginBottom:24}}><PostImage src={post.imageUrl} alt={post.title} height={340}/></div>
           <Tag text={post.tag} variant="news"/>
           <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(22px,3.5vw,36px)',color:C.text,margin:'14px 0 8px',lineHeight:1.15}}>{post.title}</h1>
           <p style={{fontFamily:FONT,fontSize:15,color:C.muted,marginBottom:8,fontStyle:'italic'}}>{post.subheading}</p>
           <p style={{fontFamily:FONT,fontSize:13,color:C.muted,marginBottom:24}}>{post.author} · {post.date} · {post.read} read</p>
           {post.quote&&<blockquote style={{borderLeft:`4px solid ${C.primary}`,paddingLeft:18,margin:'0 0 24px',fontStyle:'italic',fontSize:16,color:C.text,lineHeight:1.7,fontFamily:FONT}}>"{post.quote}"</blockquote>}
-          <div style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85,whiteSpace:'pre-wrap'}}>{post.body}</div>
+          {post.html
+            ?<div className="blog-body" style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85}} dangerouslySetInnerHTML={{__html:post.body}}/>
+            :<div style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85,whiteSpace:'pre-wrap'}}>{post.body}</div>}
+          <div className="card" style={{marginTop:32,padding:'24px 28px',textAlign:'center',background:'linear-gradient(135deg,#EEF5FF,#FFF5F0)'}}>
+            <p style={{fontFamily:FONT,fontWeight:700,fontSize:16,color:C.text,marginBottom:14}}>Want to know how your resume scores?</p>
+            <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'12px 28px',fontSize:14}}>Analyse My Resume Free →</button>
+          </div>
         </div>
       ):(
         <>
@@ -922,12 +945,12 @@ function BlogPage({user}){
             <p style={{fontSize:15,color:C.muted,fontFamily:FONT}}>Expert advice on resumes, job search, and the Indian job market</p>
           </div>
           <div className="card" onClick={()=>setPost(featured)} style={{marginBottom:28,cursor:'pointer',overflow:'hidden'}}>
-            <img src={featured.imageUrl} alt={featured.title} style={{width:'100%',height:300,objectFit:'cover'}} onError={e=>e.target.style.display='none'}/>
+            <PostImage src={featured.imageUrl} alt={featured.title} height={300}/>
             <div style={{padding:'22px 26px'}}><Tag text={featured.tag} variant="news"/><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:24,color:C.text,margin:'10px 0 8px',lineHeight:1.2}}>{featured.title}</h2><p style={{fontFamily:FONT,fontSize:14,color:C.muted,marginBottom:12,lineHeight:1.6}}>{featured.subheading}</p>{featured.quote&&<blockquote style={{borderLeft:`3px solid ${C.primary}`,paddingLeft:12,fontStyle:'italic',fontSize:13,color:C.muted,marginBottom:12,fontFamily:FONT}}>"{featured.quote}"</blockquote>}<p style={{fontFamily:FONT,fontSize:12,color:C.muted}}>{featured.author} · {featured.date} · {featured.read} read</p></div>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(290px,1fr))',gap:20}}>
             {rest.map(p=><div key={p.id} className="card" onClick={()=>setPost(p)} style={{cursor:'pointer',overflow:'hidden'}} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-4px)'} onMouseLeave={e=>e.currentTarget.style.transform='none'}>
-              <img src={p.imageUrl} alt={p.title} style={{width:'100%',height:170,objectFit:'cover'}} onError={e=>e.target.style.display='none'}/>
+              <PostImage src={p.imageUrl} alt={p.title} height={170}/>
               <div style={{padding:'16px 18px'}}><Tag text={p.tag} variant="news"/><h3 style={{fontFamily:FONT,fontWeight:800,fontSize:16,color:C.text,margin:'10px 0 7px',lineHeight:1.25}}>{p.title}</h3><p style={{fontFamily:FONT,fontSize:13,color:C.muted,lineHeight:1.6,marginBottom:12}}>{p.subheading}</p><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontFamily:FONT,fontSize:12,color:C.muted}}>{p.date} · {p.read}</span><span style={{fontFamily:FONT,fontSize:13,fontWeight:700,color:C.primary}}>Read →</span></div></div>
             </div>)}
           </div>
@@ -938,11 +961,33 @@ function BlogPage({user}){
 }
 
 // ─── BLOG ADMIN ───────────────────────────────────────────────────────────────
+const HTML_SNIPPETS=[
+  ['🖼️ Image','\n<img src="PASTE_IMAGE_URL_HERE" alt="" />\n'],
+  ['❝ Quote','\n<blockquote>Your quote here</blockquote>\n'],
+  ['H3','\n<h3>Heading</h3>\n'],
+  ['H4','\n<h4>Sub-heading</h4>\n'],
+  ['B','<strong>bold text</strong>'],
+  ['I','<em>italic text</em>'],
+  ['🔗 Link','<a href="https://" target="_blank" rel="noopener">link text</a>'],
+  ['• List','\n<ul><li>Item one</li><li>Item two</li></ul>\n'],
+  ['1. List','\n<ol><li>Item one</li><li>Item two</li></ol>\n'],
+  ['¶','\n<p>New paragraph</p>\n'],
+];
+
 function BlogAdmin(){
-  const blank={id:'',title:'',subheading:'',tag:'',imageUrl:'',quote:'',body:'',author:'ResumebhAI Team',date:'',read:'5 min'};
-  const [posts,setPosts]=useState([]);const [form,setForm]=useState(blank);const [saving,setSaving]=useState(false);const [msg,setMsg]=useState('');
+  const blank={id:'',title:'',subheading:'',tag:'',imageUrl:'',quote:'',body:'',author:'ResumebhAI Team',date:'',read:'5 min',html:true};
+  const [posts,setPosts]=useState([]);const [form,setForm]=useState(blank);const [saving,setSaving]=useState(false);const [msg,setMsg]=useState('');const [preview,setPreview]=useState(false);
+  const bodyRef=useRef(null);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
-  useEffect(()=>{DB.loadPosts().then(setPosts);},[]);
+  useEffect(()=>{DB.loadPosts().then(db=>{const ids=new Set(db.map(p=>p.id));setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id))]);});},[]);
+  const insertSnippet=(snippet)=>{
+    const ta=bodyRef.current;
+    if(!ta){set('body',form.body+snippet);return;}
+    const start=ta.selectionStart,end=ta.selectionEnd;
+    const next=form.body.slice(0,start)+snippet+form.body.slice(end);
+    set('body',next);
+    requestAnimationFrame(()=>{ta.focus();ta.selectionStart=ta.selectionEnd=start+snippet.length;});
+  };
   const save=async()=>{
     if(!form.title||!form.body){setMsg('Title and body are required.');return;}
     setSaving(true);
@@ -960,7 +1005,21 @@ function BlogAdmin(){
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
           {[['title','Title *','Post title'],['subheading','Subheading','One-line shown in cards'],['tag','Tag','ATS Strategy, Writing Tips...'],['imageUrl','Image URL','https://...'],['quote','Pull Quote (optional)','Short memorable line'],['author','Author','ResumebhAI Team'],['date','Date (blank = today)','15 June 2025']].map(([k,l,p])=><div key={k}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{l}</label><input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={p} style={{padding:'9px 12px'}}/></div>)}
         </div>
-        <div style={{marginBottom:14}}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Article Body *</label><textarea value={form.body} onChange={e=>set('body',e.target.value)} placeholder="Full article text. Blank lines = paragraphs." rows={9} style={{padding:'10px 12px',resize:'vertical'}}/></div>
+        <div style={{marginBottom:14}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5,flexWrap:'wrap',gap:8}}>
+            <label style={{fontWeight:700,fontSize:12,color:C.text,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Article Body *</label>
+            <div style={{display:'flex',gap:14,alignItems:'center'}}>
+              <label style={{display:'flex',alignItems:'center',gap:6,fontSize:12,fontFamily:FONT,color:C.muted,cursor:'pointer'}}><input type="checkbox" checked={!!form.html} onChange={e=>set('html',e.target.checked)} style={{width:'auto'}}/>HTML formatting</label>
+              {form.html&&<button type="button" onClick={()=>setPreview(p=>!p)} className="btn-secondary" style={{padding:'5px 12px',fontSize:12}}>{preview?'✏️ Edit':'👁 Preview'}</button>}
+            </div>
+          </div>
+          {form.html&&!preview&&<div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+            {HTML_SNIPPETS.map(([label,snippet])=><button key={label} type="button" onClick={()=>insertSnippet(snippet)} className="btn-secondary" style={{padding:'5px 10px',fontSize:12}}>{label}</button>)}
+          </div>}
+          {preview
+            ?<div className="blog-body" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:'14px 16px',minHeight:180,maxHeight:400,overflowY:'auto',fontFamily:FONT,fontSize:14,color:C.text}} dangerouslySetInnerHTML={{__html:form.body}}/>
+            :<textarea ref={bodyRef} value={form.body} onChange={e=>set('body',e.target.value)} placeholder={form.html?'Write HTML directly, or use the buttons above to insert images, quotes, headings etc.':'Full article text. Blank lines = paragraphs.'} rows={12} style={{padding:'10px 12px',resize:'vertical',fontFamily:form.html?"'Courier New',monospace":'inherit',fontSize:13}}/>}
+        </div>
         {msg&&<div style={{background:msg.startsWith('✅')?'#E3FBF3':'#FFF0EC',border:`1px solid ${msg.startsWith('✅')?'#9FE1CB':'#FFCBB8'}`,borderRadius:8,padding:'9px 13px',fontSize:13,color:msg.startsWith('✅')?'#0A7D5A':'#C73800',marginBottom:12,fontFamily:FONT}}>{msg}</div>}
         <div style={{display:'flex',gap:10}}><button onClick={save} disabled={saving} className="btn-primary" style={{padding:'12px 26px',fontSize:14,display:'flex',alignItems:'center',gap:8}}>{saving?<><Spinner/>Saving…</>:form.id?'Update Post':'Publish Post'}</button>{form.id&&<button onClick={()=>setForm(blank)} className="btn-secondary" style={{padding:'12px 18px',fontSize:14}}>Cancel</button>}</div>
       </div>
@@ -1103,7 +1162,7 @@ export default function App(){
       {page==='home'    &&<HomePage setPage={setPage} showAuth={showAuth} user={user}/>}
       {page==='analyze' &&<AnalyzePage form={form} setForm={setForm} file={file} handleFile={handleFile} loading={loading} loadingMsg={loadingMsg} analyzeResume={analyzeResume} error={error} previewText={previewText}/>}
       {page==='results' &&<ResultsPage analysis={activeAnalysis} algoResult={activeAlgo} form={activeForm} saveAnalysis={saveAnalysis} setPage={setPage} user={user} analysisId={activeId} showAuth={showAuth}/>}
-      {page==='blog'    &&<BlogPage user={user}/>}
+      {page==='blog'    &&<BlogPage user={user} setPage={setPage}/>}
       {page==='blog-admin'&&isAdmin(user)&&<BlogAdmin/>}
       {page==='about'   &&<AboutPage setPage={setPage}/>}
       {page==='reports' &&user&&<ReportsPage userId={user.id} setPage={setPage} setViewReport={setViewReport}/>}
