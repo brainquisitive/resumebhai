@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { SEED_BLOG_POSTS } from "./blogSeedPosts";
+import logoFull from "./assets/logo-full.png";
+import logoIcon from "./assets/logo-icon.png";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const RAZORPAY_KEY  = import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_XXXXXXXXXXXXXXXX";
@@ -358,8 +360,9 @@ const CircleScore=({score,size=120,max=5})=>{
   return <svg width={size} height={size} viewBox="0 0 108 108"><circle cx={54} cy={54} r={r} fill="none" stroke="#EEF1FA" strokeWidth={9}/><circle cx={54} cy={54} r={r} fill="none" stroke={color} strokeWidth={9} strokeDasharray={`${circ} ${circ}`} strokeDashoffset={offset} strokeLinecap="round" transform="rotate(-90 54 54)" style={{transition:'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)'}}/><text x={54} y={49} textAnchor="middle" fontSize={21} fontWeight="700" fill={color} fontFamily="Arial">{score.toFixed(1)}</text><text x={54} y={65} textAnchor="middle" fontSize={11} fill={C.muted} fontFamily="Arial">/ {max}.0</text></svg>;
 };
 const Logo=({size='md',onClick,light=false})=>{
-  const fs=size==='sm'?16:size==='lg'?26:19,b=size==='sm'?28:size==='lg'?44:34;
-  return <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:9,background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><div style={{width:b,height:b,borderRadius:Math.round(b*.28),background:'linear-gradient(135deg,#4361EE,#7B2FBE)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:b*.45}}>⬡</div><span style={{fontFamily:FONT,fontWeight:800,fontSize:fs,color:light?'#fff':C.text}}>Resume<span style={{color:C.accent}}>bh</span><span style={{color:light?'#7EB3FF':C.primary}}>AI</span></span></button>;
+  const fs=size==='sm'?16:size==='lg'?26:19,b=size==='sm'?28:size==='lg'?44:34,h=size==='sm'?26:size==='lg'?40:32;
+  if(light) return <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:9,background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><img src={logoIcon} alt="" style={{height:b,width:b,objectFit:'contain'}}/><span style={{fontFamily:FONT,fontWeight:800,fontSize:fs,color:'#fff'}}>Resume<span style={{color:'#7EB3FF'}}>bh</span><span style={{color:'#7EB3FF'}}>AI</span></span></button>;
+  return <button onClick={onClick} style={{display:'flex',alignItems:'center',background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><img src={logoFull} alt="ResumebhAI" style={{height:h,width:'auto',objectFit:'contain'}}/></button>;
 };
 
 // ─── AUTH MODAL ───────────────────────────────────────────────────────────────
