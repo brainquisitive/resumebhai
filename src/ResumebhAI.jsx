@@ -235,6 +235,32 @@ const signInWithGoogle = async () => {
   const result = await auth.signInWithPopup(provider);
   return {id:result.user.uid,name:result.user.displayName,email:result.user.email,photo:result.user.photoURL,emailVerified:result.user.emailVerified};
 };
+// Action emails (verification/reset) must point back at the live site so the
+// link works — otherwise Firebase falls back to its default *.firebaseapp.com
+// action handler, which still sends the email but can look broken/untrusted.
+const ACTION_CODE_SETTINGS = { url: typeof window!=='undefined' ? window.location.origin : 'https://resumebhai.com' };
+
+// Firebase v9's compat SDK collapses "wrong password" / "no such user" into a
+// single auth/invalid-login-credentials (or auth/invalid-credential) error for
+// security reasons. Translate the common codes into messages users can act on.
+const friendlyAuthError = (e, signinMethods) => {
+  const code = e.code || '';
+  if(code==='auth/invalid-login-credentials' || code==='auth/invalid-credential' || code==='auth/wrong-password' || code==='auth/user-not-found'){
+    if(signinMethods && signinMethods.length && !signinMethods.includes('password')){
+      const via = signinMethods.includes('google.com') ? 'Google' : signinMethods.join(', ');
+      return `This email is registered via ${via}. Please use "Continue with ${via}" to sign in.`;
+    }
+    if(signinMethods && signinMethods.length===0){
+      return 'No account found with this email. Please create an account first.';
+    }
+    return 'Incorrect email or password. Double-check and try again, or use "Forgot password".';
+  }
+  if(code==='auth/email-already-in-use') return 'An account already exists with this email. Try signing in instead, or use "Forgot password" to set a new password.';
+  if(code==='auth/too-many-requests') return 'Too many attempts. Please wait a few minutes and try again.';
+  if(code==='auth/weak-password') return 'Password is too weak. Use at least 6 characters.';
+  if(code==='auth/network-request-failed') return 'Network error. Check your connection and try again.';
+  return (e.message||'Something went wrong.').replace('Firebase: ','');
+};
 const firebaseRegister = async (name,email,password) => {
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
@@ -242,7 +268,7 @@ const firebaseRegister = async (name,email,password) => {
   const auth = window.firebase.auth();
   const result = await auth.createUserWithEmailAndPassword(email,password);
   await result.user.updateProfile({displayName:name});
-  await result.user.sendEmailVerification();
+  await result.user.sendEmailVerification(ACTION_CODE_SETTINGS);
   return {id:result.user.uid,name,email:result.user.email,emailVerified:false,photo:null};
 };
 const firebaseLogin = async (email,password) => {
@@ -253,12 +279,19 @@ const firebaseLogin = async (email,password) => {
   const result = await auth.signInWithEmailAndPassword(email,password);
   return {id:result.user.uid,name:result.user.displayName||email.split('@')[0],email:result.user.email,emailVerified:result.user.emailVerified,photo:null};
 };
+const firebaseFetchSignInMethods = async (email) => {
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const auth = window.firebase.auth();
+  try{ return await auth.fetchSignInMethodsForEmail(email); }catch{ return null; }
+};
 const firebaseSendVerification = async () => {
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
   if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
   const auth = window.firebase.auth();
-  if(auth.currentUser) await auth.currentUser.sendEmailVerification();
+  if(auth.currentUser) await auth.currentUser.sendEmailVerification(ACTION_CODE_SETTINGS);
 };
 const firebaseCheckVerified = async () => {
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
@@ -376,7 +409,10 @@ function AuthModal({onAuth,onClose,reason}){
     setLoading(true);setErr('');
     if(FB_READY){
       try{const u=await firebaseLogin(form.email,form.password);setSession(u);onAuth(u);}
-      catch(e){setErr(e.message.replace('Firebase: ',''));}
+      catch(e){
+        const methods = await firebaseFetchSignInMethods(form.email);
+        setErr(friendlyAuthError(e,methods));
+      }
       setLoading(false);return;
     }
     const u=getUsers().find(u=>u.email.toLowerCase()===form.email.toLowerCase()&&u.password===form.password);
@@ -391,7 +427,7 @@ function AuthModal({onAuth,onClose,reason}){
     setLoading(true);setErr('');
     if(FB_READY){
       try{const u=await firebaseRegister(form.name,form.email,form.password);setSession(u);onAuth(u);}
-      catch(e){setErr(e.message.replace('Firebase: ',''));}
+      catch(e){setErr(friendlyAuthError(e));}
       setLoading(false);return;
     }
     const users=getUsers();
@@ -414,9 +450,19 @@ function AuthModal({onAuth,onClose,reason}){
         await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
         if(!window.firebase.apps.length)window.firebase.initializeApp(FB_CONFIG);
         const auth=window.firebase.auth();
-        await auth.sendPasswordResetEmail(form.email);
-        setMsg(`Password reset email sent to ${form.email}.`);
-      }catch(e){setErr(e.message.replace('Firebase: ',''));}
+        const methods = await firebaseFetchSignInMethods(form.email);
+        if(methods && methods.length && !methods.includes('password')){
+          const via = methods.includes('google.com') ? 'Google' : methods.join(', ');
+          setErr(`This email is registered via ${via}. There is no password to reset — use "Continue with ${via}" to sign in.`);
+          setLoading(false);return;
+        }
+        if(methods && methods.length===0){
+          setErr('No account found with this email.');
+          setLoading(false);return;
+        }
+        await auth.sendPasswordResetEmail(form.email,ACTION_CODE_SETTINGS);
+        setMsg(`Password reset email sent to ${form.email}. Check your inbox (and spam/promotions folder) for an email from Firebase.`);
+      }catch(e){setErr(friendlyAuthError(e));}
       setLoading(false);return;
     }
     setTimeout(()=>{setLoading(false);setMsg(`Reset link sent to ${form.email} (if account exists).`);},1500);
@@ -469,7 +515,7 @@ function EmailVerificationWall({email,onVerified,onLogout}){
   };
   const resend=async()=>{
     setSending(true);setMsg('');
-    try{await firebaseSendVerification();setMsg('Verification email resent! Check your inbox.');}
+    try{await firebaseSendVerification();setMsg('Verification email resent! Check your inbox (and spam/promotions folder).');}
     catch(e){setMsg('Could not resend: '+e.message);}
     setSending(false);
   };
