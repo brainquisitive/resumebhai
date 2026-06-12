@@ -242,18 +242,13 @@ const ACTION_CODE_SETTINGS = { url: typeof window!=='undefined' ? window.locatio
 
 // Firebase v9's compat SDK collapses "wrong password" / "no such user" into a
 // single auth/invalid-login-credentials (or auth/invalid-credential) error for
-// security reasons. Translate the common codes into messages users can act on.
-const friendlyAuthError = (e, signinMethods) => {
+// security reasons. With email enumeration protection enabled (default on
+// newer projects), fetchSignInMethodsForEmail also always returns [] whether
+// or not the account exists, so it cannot be used to disambiguate further.
+const friendlyAuthError = (e) => {
   const code = e.code || '';
   if(code==='auth/invalid-login-credentials' || code==='auth/invalid-credential' || code==='auth/wrong-password' || code==='auth/user-not-found'){
-    if(signinMethods && signinMethods.length && !signinMethods.includes('password')){
-      const via = signinMethods.includes('google.com') ? 'Google' : signinMethods.join(', ');
-      return `This email is registered via ${via}. Please use "Continue with ${via}" to sign in.`;
-    }
-    if(signinMethods && signinMethods.length===0){
-      return 'No account found with this email. Please create an account first.';
-    }
-    return 'Incorrect email or password. Double-check and try again, or use "Forgot password".';
+    return 'Incorrect email or password, or no account exists with this email. If you have an account, use "Forgot password" to reset it.';
   }
   if(code==='auth/email-already-in-use') return 'An account already exists with this email. Try signing in instead, or use "Forgot password" to set a new password.';
   if(code==='auth/too-many-requests') return 'Too many attempts. Please wait a few minutes and try again.';
@@ -278,13 +273,6 @@ const firebaseLogin = async (email,password) => {
   const auth = window.firebase.auth();
   const result = await auth.signInWithEmailAndPassword(email,password);
   return {id:result.user.uid,name:result.user.displayName||email.split('@')[0],email:result.user.email,emailVerified:result.user.emailVerified,photo:null};
-};
-const firebaseFetchSignInMethods = async (email) => {
-  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
-  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
-  const auth = window.firebase.auth();
-  try{ return await auth.fetchSignInMethodsForEmail(email); }catch{ return null; }
 };
 const firebaseSendVerification = async () => {
   await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
@@ -409,10 +397,7 @@ function AuthModal({onAuth,onClose,reason}){
     setLoading(true);setErr('');
     if(FB_READY){
       try{const u=await firebaseLogin(form.email,form.password);setSession(u);onAuth(u);}
-      catch(e){
-        const methods = await firebaseFetchSignInMethods(form.email);
-        setErr(friendlyAuthError(e,methods));
-      }
+      catch(e){setErr(friendlyAuthError(e));}
       setLoading(false);return;
     }
     const u=getUsers().find(u=>u.email.toLowerCase()===form.email.toLowerCase()&&u.password===form.password);
@@ -450,16 +435,6 @@ function AuthModal({onAuth,onClose,reason}){
         await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
         if(!window.firebase.apps.length)window.firebase.initializeApp(FB_CONFIG);
         const auth=window.firebase.auth();
-        const methods = await firebaseFetchSignInMethods(form.email);
-        if(methods && methods.length && !methods.includes('password')){
-          const via = methods.includes('google.com') ? 'Google' : methods.join(', ');
-          setErr(`This email is registered via ${via}. There is no password to reset — use "Continue with ${via}" to sign in.`);
-          setLoading(false);return;
-        }
-        if(methods && methods.length===0){
-          setErr('No account found with this email.');
-          setLoading(false);return;
-        }
         await auth.sendPasswordResetEmail(form.email,ACTION_CODE_SETTINGS);
         setMsg(`Password reset email sent to ${form.email}. Check your inbox (and spam/promotions folder) for an email from Firebase.`);
       }catch(e){setErr(friendlyAuthError(e));}
