@@ -212,8 +212,20 @@ const extractPDFText = async (base64) => {
 // ─── Firebase / DB ────────────────────────────────────────────────────────────
 let _fbDb = null;
 const _loadScript = src => new Promise((res,rej)=>{
-  if(document.querySelector(`script[src="${src}"]`)){res();return;}
-  const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);
+  const existing = document.querySelector(`script[src="${src}"]`);
+  if(existing){
+    // A previous call may have added the tag but it might still be loading —
+    // wait for it instead of resolving immediately (which left window.firebase
+    // partially initialized and caused intermittent storeUser/auth failures).
+    if(existing.dataset.loaded==='1'){res();return;}
+    existing.addEventListener('load',res);
+    existing.addEventListener('error',rej);
+    return;
+  }
+  const s=document.createElement('script');s.src=src;
+  s.onload=()=>{s.dataset.loaded='1';res();};
+  s.onerror=rej;
+  document.head.appendChild(s);
 });
 const loadFirebase = async () => {
   if(_fbDb)return _fbDb;
