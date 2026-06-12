@@ -1175,7 +1175,7 @@ export default function App(){
 
   const handleAuth=async(u)=>{
     setUser(u);setShowAuthModal(false);
-    try{await DB.storeUser(u);}catch{}
+    try{await DB.storeUser(u);}catch(e){console.error('storeUser failed:',e);}
     if(FB_READY&&!u.emailVerified){setShowVerifyWall(true);return;}
     if(pendingAnalysis&&algoResult){
       setPendingAnalysis(false);
