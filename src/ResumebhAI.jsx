@@ -59,16 +59,19 @@ input:focus,textarea:focus,select:focus{border-color:${C.primary};background:#ff
 .skel{background:linear-gradient(90deg,#eef1fa 25%,#e0e5f7 50%,#eef1fa 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
 .check-row{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid ${C.border}}
 .check-row:last-child{border-bottom:none}
-.blog-body h3{font-family:Arial,sans-serif;font-weight:800;font-size:21px;color:${C.text};margin:28px 0 12px;line-height:1.3}
-.blog-body h4{font-family:Arial,sans-serif;font-weight:700;font-size:16px;color:${C.text};margin:20px 0 8px;line-height:1.3}
-.blog-body p{margin:0 0 16px}
-.blog-body ul,.blog-body ol{margin:0 0 16px;padding-left:24px}
-.blog-body li{margin-bottom:8px;line-height:1.7}
-.blog-body blockquote{border-left:4px solid ${C.primary};padding-left:18px;margin:20px 0;font-style:italic;color:${C.muted}}
-.blog-body img{max-width:100%;border-radius:12px;margin:16px 0;display:block}
+.blog-body{font-size:17px;line-height:1.85}
+.blog-body h2{font-family:Arial,sans-serif;font-weight:800;font-size:26px;color:${C.text};margin:36px 0 14px;line-height:1.3}
+.blog-body h3{font-family:Arial,sans-serif;font-weight:800;font-size:22px;color:${C.text};margin:32px 0 14px;line-height:1.35}
+.blog-body h4{font-family:Arial,sans-serif;font-weight:700;font-size:18px;color:${C.text};margin:24px 0 10px;line-height:1.35}
+.blog-body p{margin:0 0 20px;font-size:17px;line-height:1.85}
+.blog-body ul,.blog-body ol{margin:0 0 20px;padding-left:26px}
+.blog-body li{margin-bottom:10px;line-height:1.8;font-size:17px}
+.blog-body blockquote{border-left:4px solid ${C.primary};padding-left:20px;margin:28px 0;font-style:italic;color:${C.muted};font-size:18px;line-height:1.7}
+.blog-body img{max-width:100%;border-radius:12px;margin:24px 0;display:block}
 .blog-body a{color:${C.primary};font-weight:700}
-.blog-body code{background:#E6F7ED;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:13px}
+.blog-body code{background:#E6F7ED;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:14px}
 .blog-body strong{font-weight:800}
+.blog-body hr{border:none;border-top:1px solid ${C.border};margin:32px 0}
 `;
 
 // ─── ALGORITHMIC ANALYSIS ─────────────────────────────────────────────────────
@@ -236,6 +239,17 @@ const loadFirebase = async () => {
     if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
     _fbDb=window.firebase.firestore(); return _fbDb;
   } catch{return null;}
+};
+const uploadBlogImage = async (file) => {
+  if(!FB_READY) throw new Error('Configure Firebase to enable image uploads.');
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js');
+  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+  const storage = window.firebase.storage();
+  const path = `blog-images/${Date.now()}-${file.name}`;
+  const ref = storage.ref().child(path);
+  await ref.put(file);
+  return await ref.getDownloadURL();
 };
 const signInWithGoogle = async () => {
   if(!FB_READY) throw new Error('Configure Firebase to enable Google Sign-In.');
@@ -1047,7 +1061,10 @@ function BlogPage({user,setPage}){
     <div style={{maxWidth:1060,margin:'0 auto',padding:'50px clamp(16px,4vw,32px)'}}>
       {post?(
         <div className="fade-up">
-          <button onClick={()=>setPost(null)} className="btn-secondary" style={{padding:'8px 16px',fontSize:13,marginBottom:26}}>← Back to Blog</button>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:26,flexWrap:'wrap',gap:10}}>
+            <button onClick={()=>setPost(null)} className="btn-secondary" style={{padding:'8px 16px',fontSize:13}}>← Back to Blog</button>
+            {isAdmin(user)&&<button onClick={()=>{localStorage.setItem('rbhai_edit_post',JSON.stringify(post));setPage('blog-admin');}} className="btn-secondary" style={{padding:'8px 16px',fontSize:13}}>✏️ Edit this post</button>}
+          </div>
           <div style={{borderRadius:16,overflow:'hidden',marginBottom:24}}><PostImage src={post.imageUrl} alt={post.title} height={340}/></div>
           <Tag text={post.tag} variant="news"/>
           <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(22px,3.5vw,36px)',color:C.text,margin:'14px 0 8px',lineHeight:1.15}}>{post.title}</h1>
@@ -1101,9 +1118,32 @@ const HTML_SNIPPETS=[
 function BlogAdmin(){
   const blank={id:'',title:'',subheading:'',tag:'',imageUrl:'',quote:'',body:'',author:'ResumebhAI Team',date:'',read:'5 min',html:true};
   const [posts,setPosts]=useState([]);const [form,setForm]=useState(blank);const [saving,setSaving]=useState(false);const [msg,setMsg]=useState('');const [preview,setPreview]=useState(false);
+  const [uploadingCover,setUploadingCover]=useState(false);const [uploadingInline,setUploadingInline]=useState(false);
   const bodyRef=useRef(null);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   useEffect(()=>{DB.loadPosts().then(db=>{const ids=new Set(db.map(p=>p.id));setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id))]);});},[]);
+  useEffect(()=>{
+    const pending=localStorage.getItem('rbhai_edit_post');
+    if(pending){
+      try{setForm({...blank,...JSON.parse(pending)});}catch{}
+      localStorage.removeItem('rbhai_edit_post');
+      window.scrollTo(0,0);
+    }
+  },[]);
+  const handleCoverUpload=async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    setUploadingCover(true);setMsg('');
+    try{const url=await uploadBlogImage(file);set('imageUrl',url);}
+    catch(err){setMsg('❌ '+err.message);}
+    finally{setUploadingCover(false);e.target.value='';}
+  };
+  const handleInlineUpload=async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    setUploadingInline(true);setMsg('');
+    try{const url=await uploadBlogImage(file);insertSnippet(`\n<img src="${url}" alt="" />\n`);}
+    catch(err){setMsg('❌ '+err.message);}
+    finally{setUploadingInline(false);e.target.value='';}
+  };
   const insertSnippet=(snippet)=>{
     const ta=bodyRef.current;
     if(!ta){set('body',form.body+snippet);return;}
@@ -1127,7 +1167,9 @@ function BlogAdmin(){
         <h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text,marginBottom:18}}>{form.id?'Edit Post':'Add New Post'}</h3>
         {form.imageUrl&&<img src={form.imageUrl} alt="" style={{width:'100%',height:160,objectFit:'cover',borderRadius:10,marginBottom:16}} onError={e=>e.target.style.display='none'}/>}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
-          {[['title','Title *','Post title'],['subheading','Subheading','One-line shown in cards'],['tag','Tag','ATS Strategy, Writing Tips...'],['imageUrl','Image URL','https://...'],['quote','Pull Quote (optional)','Short memorable line'],['author','Author','ResumebhAI Team'],['date','Date (blank = today)','15 June 2025']].map(([k,l,p])=><div key={k}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{l}</label><input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={p} style={{padding:'9px 12px'}}/></div>)}
+          {[['title','Title *','Post title'],['subheading','Subheading','One-line shown in cards'],['tag','Tag','ATS Strategy, Writing Tips...'],['imageUrl','Image URL','https://...'],['quote','Pull Quote (optional)','Short memorable line'],['author','Author','ResumebhAI Team'],['date','Date (blank = today)','15 June 2025']].map(([k,l,p])=><div key={k}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{l}</label><input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={p} style={{padding:'9px 12px'}}/>
+            {k==='imageUrl'&&<label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,marginTop:6,cursor:'pointer'}}>{uploadingCover?<><Spinner/>Uploading…</>:'📁 Upload cover image'}<input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} style={{display:'none'}}/></label>}
+          </div>)}
         </div>
         <div style={{marginBottom:14}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5,flexWrap:'wrap',gap:8}}>
@@ -1139,6 +1181,7 @@ function BlogAdmin(){
           </div>
           {form.html&&!preview&&<div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
             {HTML_SNIPPETS.map(([label,snippet])=><button key={label} type="button" onClick={()=>insertSnippet(snippet)} className="btn-secondary" style={{padding:'5px 10px',fontSize:12}}>{label}</button>)}
+            <label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',fontSize:12,cursor:'pointer'}}>{uploadingInline?<><Spinner/>Uploading…</>:'📁 Upload & insert image'}<input type="file" accept="image/*" onChange={handleInlineUpload} disabled={uploadingInline} style={{display:'none'}}/></label>
           </div>}
           {preview
             ?<div className="blog-body" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:'14px 16px',minHeight:180,maxHeight:400,overflowY:'auto',fontFamily:FONT,fontSize:14,color:C.text}} dangerouslySetInnerHTML={{__html:form.body}}/>
