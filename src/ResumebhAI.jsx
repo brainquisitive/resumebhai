@@ -591,8 +591,37 @@ function HomePage({setPage,showAuth,user}){
         </div>
       </div>
 
+      {/* Pricing */}
+      <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.bg}}>
+        <div style={{maxWidth:860,margin:'0 auto'}}>
+          <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>Choose the plan that's right for you</h2>
+          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:40,fontFamily:FONT}}>Start free. Upgrade once, whenever you're ready — no subscriptions.</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:24}}>
+            <div className="card" style={{padding:32,display:'flex',flexDirection:'column'}}>
+              <div style={{marginBottom:6}}><Tag text="Free — Instant" variant="free"/></div>
+              <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:24,color:C.text,margin:'14px 0 4px'}}>Free</h3>
+              <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For getting a quick, honest read on your resume</p>
+              <div style={{fontFamily:FONT,fontWeight:800,fontSize:40,color:C.text,marginBottom:4}}>₹0</div>
+              <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>forever · no sign-up needed</p>
+              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:16}}>Start Free Analysis →</button>
+              <button onClick={()=>document.getElementById('whats-included')?.scrollIntoView({behavior:'smooth'})} style={{background:'none',border:'none',cursor:'pointer',color:C.primary,fontWeight:700,fontSize:13,fontFamily:FONT,textAlign:'left',padding:0}}>What you get →</button>
+            </div>
+            <div className="card" style={{padding:32,display:'flex',flexDirection:'column',position:'relative',border:`2px solid ${C.primary}`}}>
+              <div style={{position:'absolute',top:-13,right:24,background:'linear-gradient(135deg,#4361EE,#7B2FBE)',color:'#fff',fontFamily:FONT,fontWeight:700,fontSize:11,padding:'5px 14px',borderRadius:20}}>Most popular</div>
+              <div style={{marginBottom:6}}><Tag text="AI Career Pack" variant="paid"/></div>
+              <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:24,color:C.text,margin:'14px 0 4px'}}>Career Pack</h3>
+              <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For when you're ready to apply — AI rewrites & prep</p>
+              <div style={{fontFamily:FONT,fontWeight:800,fontSize:40,color:C.text,marginBottom:4}}>₹199</div>
+              <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>one-time · no subscription</p>
+              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:16}}>Get Career Pack — ₹199</button>
+              <button onClick={()=>document.getElementById('whats-included')?.scrollIntoView({behavior:'smooth'})} style={{background:'none',border:'none',cursor:'pointer',color:C.primary,fontWeight:700,fontSize:13,fontFamily:FONT,textAlign:'left',padding:0}}>What you get →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* What's Checked */}
-      <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.surface}}>
+      <div id="whats-included" style={{padding:'64px clamp(16px,5vw,56px)',background:C.surface}}>
         <div style={{maxWidth:960,margin:'0 auto'}}>
           <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>What gets checked</h2>
           <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:40,fontFamily:FONT}}>8 checks are free instantly · 6 AI-powered features for ₹199</p>
