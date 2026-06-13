@@ -641,20 +641,81 @@ function HomePage({setPage,showAuth,user}){
 
       {/* Sample analysis preview */}
       <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.surface}}>
-        <div style={{maxWidth:780,margin:'0 auto'}}>
+        <div style={{maxWidth:960,margin:'0 auto'}}>
           <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>Here's what you'll see</h2>
-          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:36,fontFamily:FONT}}>Each check shows exactly what's wrong and how to fix it</p>
-          <div className="card" style={{padding:28}}>
+          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:36,fontFamily:FONT}}>A real preview of your free report, and what's inside the ₹199 AI Career Pack</p>
+
+          {/* Free report sample */}
+          <div style={{marginBottom:14}}><Tag text="Free — Instant Report Sample" variant="free"/></div>
+          <div className="card" style={{padding:28,marginBottom:48}}>
             <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:24,flexWrap:'wrap'}}>
               <CircleScore score={3.2} size={100}/>
-              <div><p style={{fontFamily:FONT,fontWeight:800,fontSize:22,color:C.text,marginBottom:4}}>Your Resume Score: 3.2 / 5.0</p><p style={{fontFamily:FONT,fontSize:14,color:C.muted}}>Good foundation — but 3 critical issues found</p></div>
+              <div><p style={{fontFamily:FONT,fontWeight:800,fontSize:22,color:C.text,marginBottom:4}}>Your Resume Score: 3.2 / 5.0</p><p style={{fontFamily:FONT,fontSize:14,color:C.muted}}>Good foundation — but a few issues are holding you back</p></div>
             </div>
-            {[{id:'x',name:'Quantify Impact',score:1,status:'bad',headline:'Only 2 of 18 bullets have numbers',detail:'Aim for 60%+ of bullet points to contain a number, %, or ₹ amount.',fix:'Add specific numbers: "Managed ₹4Cr project delivering 3 weeks ahead of schedule"'},{id:'y',name:'Filler Words',score:2,status:'bad',headline:'3 filler phrases found',detail:'Found: "responsible for", "helped with", "involved in"',fix:'Replace with action verbs. "Responsible for managing" → "Managed"'},{id:'z',name:'Action Verbs',score:4,status:'good',headline:'14 of 18 bullets use strong verbs ✓',detail:'Good use of action verbs like Coordinated, Developed, Delivered.',fix:null}].map(c=><div key={c.id} className="check-row">
+            {[
+              {id:'qi',name:'Quantify Impact',score:1,status:'bad',headline:'Only 2 of 18 bullets have numbers',fix:'Add specific numbers: "Managed ₹4Cr project delivering 3 weeks ahead of schedule"'},
+              {id:'fw',name:'Filler Words',score:2,status:'bad',headline:'3 filler phrases found',fix:'Replace with action verbs. "Responsible for managing" → "Managed"'},
+              {id:'av',name:'Action Verbs',score:4,status:'good',headline:'14 of 18 bullets use strong verbs ✓',fix:null},
+              {id:'rl',name:'Resume Length',score:5,status:'good',headline:'1 page — ideal for your experience level ✓',fix:null},
+              {id:'sc',name:'Section Completeness',score:3,status:'warn',headline:'Missing a Certifications section',fix:'Add a Certifications section if you have any relevant courses or credentials.'},
+              {id:'ci',name:'Contact Info',score:5,status:'good',headline:'All contact details present ✓',fix:null},
+              {id:'wr',name:'Word Repetition',score:2,status:'bad',headline:'"Managed" used 9 times — vary your verbs',fix:'Mix in synonyms like Led, Directed, Oversaw, Coordinated, Drove.'},
+              {id:'bz',name:'Buzzwords',score:3,status:'warn',headline:'2 generic buzzwords found: "hardworking", "team player"',fix:'Replace with evidence: instead of "team player", describe a specific collaboration win.'},
+            ].map(c=><div key={c.id} className="check-row">
               <div style={{width:36,height:36,borderRadius:10,background:c.status==='good'?'#E3FBF3':c.status==='warn'?'#FFF8EC':'#FFF0EC',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{c.status==='good'?'✅':c.status==='warn'?'⚠️':'❌'}</div>
               <div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4,flexWrap:'wrap',gap:6}}><p style={{fontFamily:FONT,fontWeight:700,fontSize:14,color:C.text}}>{c.name}</p><span style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:sc(c.score)}}>{c.score}/5</span></div><p style={{fontFamily:FONT,fontSize:13,color:C.text,marginBottom:c.fix?4:0}}>{c.headline}</p>{c.fix&&<p style={{fontFamily:FONT,fontSize:12,color:C.primary,background:'#EEF1FF',borderRadius:6,padding:'5px 10px',marginTop:4}}>💡 {c.fix}</p>}</div>
             </div>)}
             <div style={{marginTop:16,textAlign:'center'}}><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'12px 32px',fontSize:14}}>Get My Real Score →</button></div>
           </div>
+
+          {/* Paid career pack samples */}
+          <div style={{marginBottom:14}}><Tag text="₹199 — AI Career Pack Samples" variant="paid"/></div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:24}}>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>🔑</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>Missing Keywords</h4></div>
+              <p style={{fontFamily:FONT,fontSize:12,color:C.muted,marginBottom:10}}>Matched against your target job description:</p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                {['Stakeholder Management','Budgeting','Risk Mitigation','Agile','Vendor Negotiation','P&L Ownership'].map(k=><span key={k} style={{fontSize:11,fontFamily:FONT,fontWeight:700,padding:'4px 10px',borderRadius:20,background:'#FFF0EC',color:'#C73800',border:'1px solid #FFCBB8'}}>{k}</span>)}
+              </div>
+            </div>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>✍️</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>ATS Resume Rewrite</h4></div>
+              <div style={{background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:8,padding:'10px 12px',fontFamily:"'Courier New',monospace",fontSize:11.5,color:C.muted,marginBottom:6,textDecoration:'line-through'}}>Responsible for managing a team and helped with project delivery.</div>
+              <div style={{background:'#E3FBF3',border:'1px solid #9FE1CB',borderRadius:8,padding:'10px 12px',fontFamily:"'Courier New',monospace",fontSize:11.5,color:'#0A7D5A'}}>Led a 6-member team to deliver 4 client projects 2 weeks ahead of schedule, improving on-time delivery by 30%.</div>
+            </div>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>🎨</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>Visual / Formatted Resume</h4></div>
+              <div style={{background:'#fff',border:`1px solid ${C.border}`,borderRadius:8,padding:14}}>
+                <div style={{height:10,width:'55%',background:C.primary,borderRadius:3,marginBottom:6}}/>
+                <div style={{height:6,width:'35%',background:C.border,borderRadius:3,marginBottom:14}}/>
+                {[1,2,3].map(i=><div key={i} style={{marginBottom:10}}><div style={{height:7,width:'30%',background:C.purple,borderRadius:3,marginBottom:5}}/><div style={{height:5,width:'90%',background:C.border,borderRadius:3,marginBottom:4}}/><div style={{height:5,width:'80%',background:C.border,borderRadius:3}}/></div>)}
+              </div>
+            </div>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>✉️</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>Cover Letter</h4></div>
+              <div style={{background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:8,padding:'12px 14px',fontFamily:FONT,fontSize:12,color:C.text,lineHeight:1.7}}>
+                <p style={{marginBottom:6}}>Dear Hiring Manager,</p>
+                <p style={{marginBottom:6}}>With 8 years leading cross-functional teams in project delivery, I'm excited to bring my track record of on-time, on-budget execution to the Project Manager role at your organisation…</p>
+                <p style={{color:C.muted}}>— Tailored to each job description</p>
+              </div>
+            </div>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>💼</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>LinkedIn & Naukri Optimisation</h4></div>
+              <div style={{background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:8,padding:'12px 14px',fontFamily:FONT,fontSize:12,color:C.text}}>
+                <p style={{fontWeight:700,marginBottom:6}}>Suggested Headline:</p>
+                <p style={{color:C.primary,marginBottom:10}}>"Project Manager | Driving ₹50Cr+ Infrastructure Delivery | Agile & Stakeholder Management"</p>
+                <p style={{fontWeight:700,marginBottom:6}}>Naukri Key Skills:</p>
+                <p style={{color:C.muted}}>Project Management, Agile, Stakeholder Management, Budgeting, Risk Mitigation…</p>
+              </div>
+            </div>
+            <div className="card" style={{padding:24}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>🎯</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>12 Interview Q&As</h4></div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {['Tell me about a time you delivered a project under a tight deadline.','How do you handle conflicting priorities from multiple stakeholders?','Walk me through how you manage project budgets.'].map((q,i)=><div key={i} style={{background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:8,padding:'9px 12px',fontFamily:FONT,fontSize:12,color:C.text}}><b style={{color:C.primary}}>Q{i+1}.</b> {q}</div>)}
+              </div>
+            </div>
+          </div>
+          <div style={{marginTop:32,textAlign:'center'}}><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'14px 36px',fontSize:15}}>Unlock the AI Career Pack — ₹199</button></div>
         </div>
       </div>
 
