@@ -603,8 +603,11 @@ function HomePage({setPage,showAuth,user}){
               <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For getting a quick, honest read on your resume</p>
               <div style={{fontFamily:FONT,fontWeight:800,fontSize:40,color:C.text,marginBottom:4}}>₹0</div>
               <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>forever · no sign-up needed</p>
-              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:16}}>Start Free Analysis →</button>
-              <button onClick={()=>document.getElementById('whats-included')?.scrollIntoView({behavior:'smooth'})} style={{background:'none',border:'none',cursor:'pointer',color:C.primary,fontWeight:700,fontSize:13,fontFamily:FONT,textAlign:'left',padding:0}}>What you get →</button>
+              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:20}}>Start Free Analysis →</button>
+              <p style={{fontFamily:FONT,fontWeight:700,fontSize:12,color:C.text,textTransform:'uppercase',letterSpacing:'.6px',marginBottom:12}}>What you get</p>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {checks.filter(c=>c.free).map(c=><div key={c.label} style={{display:'flex',alignItems:'center',gap:9}}><span style={{color:C.teal,fontSize:15}}>✓</span><span style={{fontFamily:FONT,fontSize:13,color:C.text}}>{c.label}</span></div>)}
+              </div>
             </div>
             <div className="card" style={{padding:32,display:'flex',flexDirection:'column',position:'relative',border:`2px solid ${C.primary}`}}>
               <div style={{position:'absolute',top:-13,right:24,background:'linear-gradient(135deg,#4361EE,#7B2FBE)',color:'#fff',fontFamily:FONT,fontWeight:700,fontSize:11,padding:'5px 14px',borderRadius:20}}>Most popular</div>
@@ -613,8 +616,11 @@ function HomePage({setPage,showAuth,user}){
               <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For when you're ready to apply — AI rewrites & prep</p>
               <div style={{fontFamily:FONT,fontWeight:800,fontSize:40,color:C.text,marginBottom:4}}>₹199</div>
               <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>one-time · no subscription</p>
-              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:16}}>Get Career Pack — ₹199</button>
-              <button onClick={()=>document.getElementById('whats-included')?.scrollIntoView({behavior:'smooth'})} style={{background:'none',border:'none',cursor:'pointer',color:C.primary,fontWeight:700,fontSize:13,fontFamily:FONT,textAlign:'left',padding:0}}>What you get →</button>
+              <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:20}}>Get Career Pack — ₹199</button>
+              <p style={{fontFamily:FONT,fontWeight:700,fontSize:12,color:C.text,textTransform:'uppercase',letterSpacing:'.6px',marginBottom:12}}>Everything in Free, plus</p>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {checks.filter(c=>!c.free).map(c=><div key={c.label} style={{display:'flex',alignItems:'center',gap:9}}><span style={{color:C.primary,fontSize:15}}>✓</span><span style={{fontFamily:FONT,fontSize:13,color:C.text}}>{c.label}</span></div>)}
+              </div>
             </div>
           </div>
         </div>
