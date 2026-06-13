@@ -532,11 +532,16 @@ function EmailVerificationWall({email,onVerified,onLogout}){
 function Navbar({page,setPage,user,onLogout,showAuth}){
   const [menu,setMenu]=useState(false);
   const initials=user?(user.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2):null;
+  const goToPricing=()=>{
+    if(page!=='home'){setPage('home');setTimeout(()=>document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'}),100);}
+    else document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'});
+  };
   return(
     <nav style={{position:'sticky',top:0,zIndex:100,background:'rgba(243,246,255,0.93)',backdropFilter:'blur(18px)',borderBottom:`1px solid ${C.border}`,height:62,display:'flex',alignItems:'center',padding:'0 clamp(16px,5vw,56px)',justifyContent:'space-between'}}>
       <Logo onClick={()=>setPage('home')}/>
       <div style={{display:'flex',gap:4,alignItems:'center'}}>
         {['home','analyze','blog','about'].map(l=><button key={l} onClick={()=>setPage(l)} style={{padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,transition:'all .15s',background:page===l?'#fff':'transparent',color:page===l?C.primary:C.muted,boxShadow:page===l?'0 1px 8px rgba(67,97,238,.13)':'none',textTransform:'capitalize',fontFamily:FONT}}>{l}</button>)}
+        <button onClick={goToPricing} style={{padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,transition:'all .15s',background:'transparent',color:C.muted,fontFamily:FONT}}>What We Offer</button>
         {TEST_MODE&&<span style={{fontSize:11,background:'#FEF9EC',color:'#92600A',border:'1px solid #F59E0B',borderRadius:6,padding:'2px 8px',fontWeight:700,fontFamily:FONT}}>TEST</span>}
         {user?(
           <div style={{position:'relative',marginLeft:8}}>
@@ -592,7 +597,7 @@ function HomePage({setPage,showAuth,user}){
       </div>
 
       {/* Pricing */}
-      <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.bg}}>
+      <div id="pricing" style={{padding:'64px clamp(16px,5vw,56px)',background:C.bg}}>
         <div style={{maxWidth:860,margin:'0 auto'}}>
           <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>Choose the plan that's right for you</h2>
           <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:40,fontFamily:FONT}}>Start free. Upgrade once, whenever you're ready — no subscriptions.</p>
@@ -620,34 +625,6 @@ function HomePage({setPage,showAuth,user}){
               <p style={{fontFamily:FONT,fontWeight:700,fontSize:12,color:C.text,textTransform:'uppercase',letterSpacing:'.6px',marginBottom:12}}>Everything in Free, plus</p>
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
                 {checks.filter(c=>!c.free).map(c=><div key={c.label} style={{display:'flex',alignItems:'center',gap:9}}><span style={{color:C.primary,fontSize:15}}>✓</span><span style={{fontFamily:FONT,fontSize:13,color:C.text}}>{c.label}</span></div>)}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* What's Checked */}
-      <div id="whats-included" style={{padding:'64px clamp(16px,5vw,56px)',background:C.surface}}>
-        <div style={{maxWidth:960,margin:'0 auto'}}>
-          <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>What gets checked</h2>
-          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:40,fontFamily:FONT}}>8 checks are free instantly · 6 AI-powered features for ₹199</p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:24}}>
-            <div>
-              <div style={{textAlign:'center',marginBottom:14}}><Tag text="Free — Instant" variant="free"/></div>
-              <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {checks.filter(c=>c.free).map(c=><div key={c.label} style={{padding:'14px 16px',borderRadius:12,border:`1px solid ${C.teal}44`,background:'#F0FBF7',display:'flex',alignItems:'center',gap:10}}>
-                  <span style={{fontSize:18}}>{c.icon}</span>
-                  <p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{c.label}</p>
-                </div>)}
-              </div>
-            </div>
-            <div>
-              <div style={{textAlign:'center',marginBottom:14}}><Tag text="₹199 — AI Career Pack" variant="paid"/></div>
-              <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {checks.filter(c=>!c.free).map(c=><div key={c.label} style={{padding:'14px 16px',borderRadius:12,border:`1px solid ${C.gold}55`,background:'#FFFBF0',display:'flex',alignItems:'center',gap:10}}>
-                  <span style={{fontSize:18}}>{c.icon}</span>
-                  <p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{c.label}</p>
-                </div>)}
               </div>
             </div>
           </div>
