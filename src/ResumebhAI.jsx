@@ -16,6 +16,7 @@ const FB_CONFIG = {
   appId:              import.meta.env.VITE_FB_APP_ID             || "YOUR_APP_ID",
 };
 const FB_READY = FB_CONFIG.apiKey !== "YOUR_API_KEY";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const FONT = "Arial, sans-serif";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
@@ -240,25 +241,44 @@ const loadFirebase = async () => {
     _fbDb=window.firebase.firestore(); return _fbDb;
   } catch{return null;}
 };
+let _gDriveToken = null; // {token, expiresAt}
+const _getGoogleDriveToken = () => new Promise((resolve,reject)=>{
+  if(!GOOGLE_CLIENT_ID) return reject(new Error('Google Drive upload is not configured. Set VITE_GOOGLE_CLIENT_ID.'));
+  if(_gDriveToken && _gDriveToken.expiresAt > Date.now()+10000) return resolve(_gDriveToken.token);
+  _loadScript('https://accounts.google.com/gsi/client').then(()=>{
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      callback: resp => {
+        if(resp.error) return reject(new Error('Google Drive authorization failed: '+resp.error));
+        _gDriveToken = {token:resp.access_token, expiresAt: Date.now()+(resp.expires_in*1000)};
+        resolve(resp.access_token);
+      },
+      error_callback: err => reject(new Error('Google Drive authorization failed: '+(err?.type||'unknown error'))),
+    });
+    client.requestAccessToken();
+  }).catch(()=>reject(new Error('Could not load Google Identity Services script.')));
+});
 const uploadBlogImage = async (file) => {
-  if(!FB_READY) throw new Error('Configure Firebase to enable image uploads.');
-  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-  await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js');
-  if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
-  const storage = window.firebase.storage();
-  const path = `blog-images/${Date.now()}-${file.name}`;
-  const ref = storage.ref().child(path);
-  const uploadTask = ref.put(file);
-  const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('Upload timed out. Check that Firebase Storage is enabled for this project and that Storage rules allow admin writes.')),30000));
-  try{
-    await Promise.race([uploadTask, timeout]);
-  }catch(err){
-    uploadTask.cancel?.();
-    if(err?.code==='storage/unauthorized') throw new Error('Permission denied. Update your Firebase Storage rules to allow writes for the admin account.');
-    if(err?.code==='storage/unknown'||err?.code==='storage/retry-limit-exceeded') throw new Error('Upload failed. Make sure Firebase Storage is enabled for this project.');
-    throw err;
-  }
-  return await ref.getDownloadURL();
+  const token = await _getGoogleDriveToken();
+  const metadata = {name:`blog-${Date.now()}-${file.name}`, mimeType:file.type};
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], {type:'application/json'}));
+  form.append('file', file);
+  const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method:'POST',
+    headers:{Authorization:`Bearer ${token}`},
+    body: form,
+  });
+  if(!uploadRes.ok) throw new Error('Upload to Google Drive failed: '+(await uploadRes.text()));
+  const {id} = await uploadRes.json();
+  const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
+    method:'POST',
+    headers:{Authorization:`Bearer ${token}`, 'Content-Type':'application/json'},
+    body: JSON.stringify({role:'reader', type:'anyone'}),
+  });
+  if(!permRes.ok) throw new Error('Could not make the uploaded image public: '+(await permRes.text()));
+  return `https://lh3.googleusercontent.com/d/${id}`;
 };
 const signInWithGoogle = async () => {
   if(!FB_READY) throw new Error('Configure Firebase to enable Google Sign-In.');
@@ -1177,7 +1197,7 @@ function BlogAdmin(){
         {form.imageUrl&&<img src={form.imageUrl} alt="" style={{width:'100%',height:160,objectFit:'cover',borderRadius:10,marginBottom:16}} onError={e=>e.target.style.display='none'}/>}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
           {[['title','Title *','Post title'],['subheading','Subheading','One-line shown in cards'],['tag','Tag','ATS Strategy, Writing Tips...'],['imageUrl','Image URL','https://...'],['quote','Pull Quote (optional)','Short memorable line'],['author','Author','ResumebhAI Team'],['date','Date (blank = today)','15 June 2025']].map(([k,l,p])=><div key={k}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{l}</label><input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={p} style={{padding:'9px 12px'}}/>
-            {k==='imageUrl'&&<label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,marginTop:6,cursor:'pointer'}}>{uploadingCover?<><Spinner/>Uploading…</>:'📁 Upload cover image'}<input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} style={{display:'none'}}/></label>}
+            {k==='imageUrl'&&<label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,marginTop:6,cursor:'pointer'}}>{uploadingCover?<><Spinner/>Uploading…</>:'📁 Upload cover image to Drive'}<input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} style={{display:'none'}}/></label>}
           </div>)}
         </div>
         <div style={{marginBottom:14}}>
@@ -1190,7 +1210,7 @@ function BlogAdmin(){
           </div>
           {form.html&&!preview&&<div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
             {HTML_SNIPPETS.map(([label,snippet])=><button key={label} type="button" onClick={()=>insertSnippet(snippet)} className="btn-secondary" style={{padding:'5px 10px',fontSize:12}}>{label}</button>)}
-            <label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',fontSize:12,cursor:'pointer'}}>{uploadingInline?<><Spinner/>Uploading…</>:'📁 Upload & insert image'}<input type="file" accept="image/*" onChange={handleInlineUpload} disabled={uploadingInline} style={{display:'none'}}/></label>
+            <label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',fontSize:12,cursor:'pointer'}}>{uploadingInline?<><Spinner/>Uploading…</>:'📁 Upload to Drive & insert'}<input type="file" accept="image/*" onChange={handleInlineUpload} disabled={uploadingInline} style={{display:'none'}}/></label>
           </div>}
           {preview
             ?<div className="blog-body" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:'14px 16px',minHeight:180,maxHeight:400,overflowY:'auto',fontFamily:FONT,fontSize:14,color:C.text}} dangerouslySetInnerHTML={{__html:form.body}}/>
