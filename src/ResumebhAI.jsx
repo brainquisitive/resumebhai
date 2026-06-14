@@ -11,7 +11,7 @@ const FB_CONFIG = {
   apiKey:             import.meta.env.VITE_FB_API_KEY            || "YOUR_API_KEY",
   authDomain:         import.meta.env.VITE_FB_AUTH_DOMAIN        || "YOUR_PROJECT.firebaseapp.com",
   projectId:          import.meta.env.VITE_FB_PROJECT_ID         || "YOUR_PROJECT_ID",
-  storageBucket:      import.meta.env.VITE_FB_STORAGE_BUCKET     || "YOUR_PROJECT.appspot.com",
+  storageBucket:      import.meta.env.VITE_FB_STORAGE_BUCKET     || (import.meta.env.VITE_FB_PROJECT_ID ? `${import.meta.env.VITE_FB_PROJECT_ID}.appspot.com` : "YOUR_PROJECT.appspot.com"),
   messagingSenderId:  import.meta.env.VITE_FB_MESSAGING_SENDER_ID|| "YOUR_SENDER_ID",
   appId:              import.meta.env.VITE_FB_APP_ID             || "YOUR_APP_ID",
 };
@@ -248,7 +248,16 @@ const uploadBlogImage = async (file) => {
   const storage = window.firebase.storage();
   const path = `blog-images/${Date.now()}-${file.name}`;
   const ref = storage.ref().child(path);
-  await ref.put(file);
+  const uploadTask = ref.put(file);
+  const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('Upload timed out. Check that Firebase Storage is enabled for this project and that Storage rules allow admin writes.')),30000));
+  try{
+    await Promise.race([uploadTask, timeout]);
+  }catch(err){
+    uploadTask.cancel?.();
+    if(err?.code==='storage/unauthorized') throw new Error('Permission denied. Update your Firebase Storage rules to allow writes for the admin account.');
+    if(err?.code==='storage/unknown'||err?.code==='storage/retry-limit-exceeded') throw new Error('Upload failed. Make sure Firebase Storage is enabled for this project.');
+    throw err;
+  }
   return await ref.getDownloadURL();
 };
 const signInWithGoogle = async () => {
