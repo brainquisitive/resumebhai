@@ -20,8 +20,8 @@ const FONT = "Arial, sans-serif";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const C = {
-  primary:"#16A34A", purple:"#0D9488", accent:"#F76B35",
-  teal:"#06D6A0", gold:"#F59E0B", bg:"#F0FBF4", surface:"#FFFFFF",
+  primary:"#F97316", purple:"#EA580C", accent:"#F76B35",
+  teal:"#06D6A0", gold:"#F59E0B", bg:"#FFF8F0", surface:"#FFFFFF",
   text:"#0A1128", muted:"#6678A8", border:"#DEE4F5",
   warn:"#FFAB35", danger:"#FF4D6D", good:"#06D6A0",
 };
@@ -41,15 +41,15 @@ body { margin:0; background:${C.bg}; font-family:Arial,sans-serif; }
 @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .fade-up{animation:fadeUp .4s ease both}
 .btn-primary{background:linear-gradient(135deg,${C.primary},${C.purple});color:#fff;border:none;cursor:pointer;font-family:Arial,sans-serif;font-weight:700;border-radius:12px;transition:transform .15s,box-shadow .15s}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(22,163,74,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(249,115,22,.35)}
 .btn-google{background:#fff;color:#3c4043;border:1.5px solid #dadce0;cursor:pointer;font-family:Arial,sans-serif;font-weight:700;border-radius:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px}
 .btn-google:hover{background:#f8f9fa;box-shadow:0 2px 8px rgba(0,0,0,.1)}
 .btn-gold{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;cursor:pointer;font-family:Arial,sans-serif;font-weight:700;border-radius:12px;transition:transform .15s,box-shadow .15s}
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(245,158,11,.4)}
 .btn-secondary{background:${C.surface};color:${C.primary};border:1.5px solid ${C.border};cursor:pointer;font-family:Arial,sans-serif;font-weight:700;border-radius:12px;transition:all .15s}
 .btn-secondary:hover{border-color:${C.primary};background:#e6f7ed}
-.card{background:${C.surface};border-radius:18px;border:1px solid ${C.border};box-shadow:0 2px 20px rgba(22,163,74,.06);transition:box-shadow .2s,transform .2s}
-.card:hover{box-shadow:0 6px 32px rgba(22,163,74,.1)}
+.card{background:${C.surface};border-radius:18px;border:1px solid ${C.border};box-shadow:0 2px 20px rgba(249,115,22,.06);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:0 6px 32px rgba(249,115,22,.1)}
 input,textarea,select{font-family:Arial,sans-serif;font-size:14px;color:${C.text};background:#FAFBFF;border:1.5px solid ${C.border};border-radius:10px;outline:none;transition:border-color .2s;width:100%}
 input:focus,textarea:focus,select:focus{border-color:${C.primary};background:#fff}
 .drop-zone{border:2px dashed ${C.border};border-radius:14px;cursor:pointer;transition:all .2s}
@@ -69,7 +69,7 @@ input:focus,textarea:focus,select:focus{border-color:${C.primary};background:#ff
 .blog-body blockquote{border-left:4px solid ${C.primary};padding-left:20px;margin:28px 0;font-style:italic;color:${C.muted};font-size:18px;line-height:1.7}
 .blog-body img{max-width:100%;border-radius:12px;margin:24px 0;display:block}
 .blog-body a{color:${C.primary};font-weight:700}
-.blog-body code{background:#E6F7ED;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:14px}
+.blog-body code{background:#FFF1E6;padding:2px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:14px}
 .blog-body strong{font-weight:800}
 .blog-body hr{border:none;border-top:1px solid ${C.border};margin:32px 0}
 `;
@@ -374,7 +374,7 @@ const openRazorpay = async ({user,onSuccess,onFail}) => {
   if(TEST_MODE){ await new Promise(r=>setTimeout(r,800)); onSuccess({test:true}); return; }
   const ok = await _loadScript('https://checkout.razorpay.com/v1/checkout.js').then(()=>true).catch(()=>false);
   if(!ok){onFail('Payment gateway could not load.');return;}
-  const rzp = new window.Razorpay({key:RAZORPAY_KEY,amount:19900,currency:'INR',name:'ResumebhAI',description:'Full Career Pack',handler:r=>onSuccess(r),prefill:{name:user?.name||'',email:user?.email||''},theme:{color:'#16A34A'},modal:{ondismiss:()=>{}}});
+  const rzp = new window.Razorpay({key:RAZORPAY_KEY,amount:19900,currency:'INR',name:'ResumebhAI',description:'Full Career Pack',handler:r=>onSuccess(r),prefill:{name:user?.name||'',email:user?.email||''},theme:{color:'#F97316'},modal:{ondismiss:()=>{}}});
   rzp.on('payment.failed',e=>onFail(e.error?.description||'Payment failed'));
   rzp.open();
 };
@@ -388,17 +388,17 @@ const printAsPDF = html => {
 const dlAtsPDF = text => {
   const esc=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const body=esc.split('\n').map(l=>{const t=l.trim();const isH=t.length>1&&t===t.toUpperCase()&&!t.startsWith('-')&&t.replace(/[^A-Z]/g,'').length>2;return isH?`<div class="sh">${l}</div>`:t.startsWith('-')?`<div class="bl">${l}</div>`:t===''?`<div class="sp"></div>`:`<div class="ln">${l}</div>`;}).join('');
-  printAsPDF(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@media print{@page{margin:18mm 20mm;size:A4}.np{display:none}}body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:24px 32px;max-width:740px;margin:0 auto;line-height:1.55}.sh{font-weight:bold;font-size:12pt;text-transform:uppercase;letter-spacing:1.5px;border-bottom:1.5px solid #333;padding-bottom:3px;margin:16px 0 6px}.bl{padding-left:14px;margin:2px 0}.ln{margin:2px 0}.sp{height:6px}.np{text-align:center;padding:14px;background:#16A34A;color:#fff;font-family:Arial;font-size:14px;border-radius:8px;cursor:pointer;margin-bottom:20px}</style></head><body><div class="np" onclick="window.print()">🖨️ Click to Save as PDF</div>${body}</body></html>`);
+  printAsPDF(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@media print{@page{margin:18mm 20mm;size:A4}.np{display:none}}body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:24px 32px;max-width:740px;margin:0 auto;line-height:1.55}.sh{font-weight:bold;font-size:12pt;text-transform:uppercase;letter-spacing:1.5px;border-bottom:1.5px solid #333;padding-bottom:3px;margin:16px 0 6px}.bl{padding-left:14px;margin:2px 0}.ln{margin:2px 0}.sp{height:6px}.np{text-align:center;padding:14px;background:#F97316;color:#fff;font-family:Arial;font-size:14px;border-radius:8px;cursor:pointer;margin-bottom:20px}</style></head><body><div class="np" onclick="window.print()">🖨️ Click to Save as PDF</div>${body}</body></html>`);
 };
 const dlVisualPDF = html => {
-  const banner=`<div style="position:fixed;top:0;left:0;right:0;background:#16A34A;color:#fff;text-align:center;padding:12px;font-family:Arial;font-size:14px;cursor:pointer;z-index:9999;" onclick="window.print()">🖨️ Click to Save as PDF</div><div style="height:48px"></div>`;
+  const banner=`<div style="position:fixed;top:0;left:0;right:0;background:#F97316;color:#fff;text-align:center;padding:12px;font-family:Arial;font-size:14px;cursor:pointer;z-index:9999;" onclick="window.print()">🖨️ Click to Save as PDF</div><div style="height:48px"></div>`;
   const css=`<style>@media print{div[onclick]{display:none!important}div[style*="height:48px"]{display:none!important}@page{margin:0;size:A4}}</style>`;
   printAsPDF(html.replace(/<body[^>]*>/,m=>m+banner).replace('</head>',css+'</head>'));
 };
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 const Tag=({text,variant='primary'})=>{
-  const s={primary:{background:'#E6F7ED',color:C.primary},missing:{background:'#FFF0EC',color:'#C73800'},success:{background:'#E3FBF3',color:'#0A7D5A'},gold:{background:'#FEF9EC',color:'#92600A'},news:{background:C.primary,color:'#fff'},free:{background:'#E3FBF3',color:'#0A7D5A'},paid:{background:'#FEF9EC',color:'#92600A'}};
+  const s={primary:{background:'#FFF1E6',color:C.primary},missing:{background:'#FFF0EC',color:'#C73800'},success:{background:'#E3FBF3',color:'#0A7D5A'},gold:{background:'#FEF9EC',color:'#92600A'},news:{background:C.primary,color:'#fff'},free:{background:'#E3FBF3',color:'#0A7D5A'},paid:{background:'#FEF9EC',color:'#92600A'}};
   return <span className="tag" style={s[variant]||s.primary}>{text}</span>;
 };
 const Spinner=({size=18,color='#fff'})=><span style={{width:size,height:size,borderRadius:'50%',border:`2px solid ${color}44`,borderTopColor:color,animation:'spin .8s linear infinite',display:'inline-block',flexShrink:0}}/>;
@@ -408,7 +408,7 @@ const CircleScore=({score,size=120,max=5})=>{
 };
 const Logo=({size='md',onClick,light=false})=>{
   const fs=size==='sm'?16:size==='lg'?26:19,b=size==='sm'?28:size==='lg'?44:34,h=size==='sm'?26:size==='lg'?40:32;
-  if(light) return <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:9,background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><img src={logoIcon} alt="" style={{height:b,width:b,objectFit:'contain'}}/><span style={{fontFamily:FONT,fontWeight:800,fontSize:fs,color:'#fff'}}>Resume<span style={{color:'#86EFAC'}}>bh</span><span style={{color:'#86EFAC'}}>AI</span></span></button>;
+  if(light) return <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:9,background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><img src={logoIcon} alt="" style={{height:b,width:b,objectFit:'contain'}}/><span style={{fontFamily:FONT,fontWeight:800,fontSize:fs,color:'#fff'}}>Resume<span style={{color:'#FDBA74'}}>bh</span><span style={{color:'#FDBA74'}}>AI</span></span></button>;
   return <button onClick={onClick} style={{display:'flex',alignItems:'center',background:'none',border:'none',cursor:onClick?'pointer':'default',padding:0}}><img src={logoFull} alt="ResumebhAI" style={{height:h,width:'auto',objectFit:'contain'}}/></button>;
 };
 
@@ -474,7 +474,7 @@ function AuthModal({onAuth,onClose,reason}){
         <button onClick={onClose} style={{position:'absolute',top:16,right:16,background:'none',border:'none',cursor:'pointer',fontSize:20,color:C.muted}}>✕</button>
         <div style={{textAlign:'center',marginBottom:22}}>
           <Logo size="sm"/>
-          {reason&&<div style={{marginTop:12,background:'#E6F7ED',borderRadius:8,padding:'8px 14px',fontSize:13,color:C.primary,fontFamily:FONT}}>{reason}</div>}
+          {reason&&<div style={{marginTop:12,background:'#FFF1E6',borderRadius:8,padding:'8px 14px',fontSize:13,color:C.primary,fontFamily:FONT}}>{reason}</div>}
         </div>
         <div style={{display:'flex',gap:4,background:C.bg,borderRadius:10,padding:4,marginBottom:20}}>
           {['login','register'].map(v=><button key={v} onClick={()=>{setView(v);setErr('');setMsg('');}} style={{flex:1,padding:'9px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:13,fontFamily:FONT,background:view===v?C.surface:'transparent',color:view===v?C.primary:C.muted,boxShadow:view===v?'0 1px 6px rgba(0,0,0,.08)':'none',textTransform:'capitalize'}}>{v==='login'?'Sign In':'Create Account'}</button>)}
@@ -554,12 +554,12 @@ function Navbar({page,setPage,user,onLogout,showAuth}){
     <nav style={{position:'sticky',top:0,zIndex:100,background:'rgba(243,246,255,0.93)',backdropFilter:'blur(18px)',borderBottom:`1px solid ${C.border}`,height:62,display:'flex',alignItems:'center',padding:'0 clamp(16px,5vw,56px)',justifyContent:'space-between'}}>
       <Logo onClick={()=>setPage('home')}/>
       <div style={{display:'flex',gap:4,alignItems:'center'}}>
-        {['home','analyze','blog','about'].map(l=><button key={l} onClick={()=>setPage(l)} style={{padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,transition:'all .15s',background:page===l?'#fff':'transparent',color:page===l?C.primary:C.muted,boxShadow:page===l?'0 1px 8px rgba(22,163,74,.13)':'none',textTransform:'capitalize',fontFamily:FONT}}>{l}</button>)}
+        {['home','analyze','blog','about'].map(l=><button key={l} onClick={()=>setPage(l)} style={{padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,transition:'all .15s',background:page===l?'#fff':'transparent',color:page===l?C.primary:C.muted,boxShadow:page===l?'0 1px 8px rgba(249,115,22,.13)':'none',textTransform:'capitalize',fontFamily:FONT}}>{l}</button>)}
         <button onClick={goToPricing} style={{padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:700,fontSize:14,transition:'all .15s',background:'transparent',color:C.muted,fontFamily:FONT}}>What We Offer</button>
         {TEST_MODE&&<span style={{fontSize:11,background:'#FEF9EC',color:'#92600A',border:'1px solid #F59E0B',borderRadius:6,padding:'2px 8px',fontWeight:700,fontFamily:FONT}}>TEST</span>}
         {user?(
           <div style={{position:'relative',marginLeft:8}}>
-            <button onClick={()=>setMenu(p=>!p)} style={{width:36,height:36,borderRadius:'50%',background:user.photo?'transparent':'linear-gradient(135deg,#16A34A,#0D9488)',border:'none',cursor:'pointer',overflow:'hidden',padding:0}}>
+            <button onClick={()=>setMenu(p=>!p)} style={{width:36,height:36,borderRadius:'50%',background:user.photo?'transparent':'linear-gradient(135deg,#F97316,#EA580C)',border:'none',cursor:'pointer',overflow:'hidden',padding:0}}>
               {user.photo?<img src={user.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{color:'#fff',fontFamily:FONT,fontWeight:800,fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%'}}>{initials}</span>}
             </button>
             {menu&&<div className="card" style={{position:'absolute',right:0,top:44,width:220,padding:'8px 0',zIndex:200}} onClick={()=>setMenu(false)}>
@@ -595,9 +595,9 @@ function HomePage({setPage,showAuth,user}){
   return(
     <div>
       {/* Hero */}
-      <div style={{background:'linear-gradient(155deg,#E8FBEF 0%,#F0FBF4 50%,#FFFBEC 100%)',padding:'80px clamp(16px,5vw,56px) 70px',textAlign:'center'}}>
+      <div style={{background:'linear-gradient(155deg,#FFF4EC 0%,#FFF8F0 50%,#FFFBEC 100%)',padding:'80px clamp(16px,5vw,56px) 70px',textAlign:'center'}}>
         <Tag text="✦  India's AI Resume Checker · Free Instant Analysis"/>
-        <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(32px,5vw,58px)',color:C.text,margin:'22px 0 18px',lineHeight:1.1,letterSpacing:'-1px'}}>Is your resume<br/><span style={{backgroundImage:'linear-gradient(135deg,#16A34A,#0D9488)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>strong enough to get hired?</span></h1>
+        <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(32px,5vw,58px)',color:C.text,margin:'22px 0 18px',lineHeight:1.1,letterSpacing:'-1px'}}>Is your resume<br/><span style={{backgroundImage:'linear-gradient(135deg,#F97316,#EA580C)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>strong enough to get hired?</span></h1>
         <p style={{fontSize:18,color:C.muted,maxWidth:560,margin:'0 auto 12px',lineHeight:1.7,fontFamily:FONT}}>Get an instant, detailed analysis of your resume — <b style={{color:C.text}}>completely free</b>. Find exactly what's holding you back and fix it.</p>
         <p style={{fontSize:14,color:C.muted,marginBottom:36,fontFamily:FONT}}>No sign-up required for free analysis · ₹199 for AI rewrites & career pack</p>
         <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
@@ -629,7 +629,7 @@ function HomePage({setPage,showAuth,user}){
               </div>
             </div>
             <div className="card" style={{padding:32,display:'flex',flexDirection:'column',position:'relative',border:`2px solid ${C.primary}`}}>
-              <div style={{position:'absolute',top:-13,right:24,background:'linear-gradient(135deg,#16A34A,#0D9488)',color:'#fff',fontFamily:FONT,fontWeight:700,fontSize:11,padding:'5px 14px',borderRadius:20}}>Most popular</div>
+              <div style={{position:'absolute',top:-13,right:24,background:'linear-gradient(135deg,#F97316,#EA580C)',color:'#fff',fontFamily:FONT,fontWeight:700,fontSize:11,padding:'5px 14px',borderRadius:20}}>Most popular</div>
               <div style={{marginBottom:6}}><Tag text="AI Career Pack" variant="paid"/></div>
               <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:24,color:C.text,margin:'14px 0 4px'}}>Career Pack</h3>
               <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For when you're ready to apply — AI rewrites & prep</p>
@@ -649,7 +649,7 @@ function HomePage({setPage,showAuth,user}){
       <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.bg}}>
         <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:44}}>How it works</h2>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:28,maxWidth:860,margin:'0 auto'}}>
-          {[['01','Upload Resume','PDF or Word. No sign-up needed.'],['02','Instant Analysis','9 checks run in seconds in your browser — no AI, no waiting.'],['03','See Your Score','Detailed breakdown with specific findings and fixes.'],['04','Unlock Career Pack','Pay ₹199 once for AI rewrites, cover letter, LinkedIn, interview prep.']].map(([n,t,d])=><div key={n} style={{textAlign:'center'}}><div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#16A34A,#0D9488)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',fontFamily:FONT,fontWeight:800,fontSize:16,color:'#fff'}}>{n}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>{t}</h4><p style={{fontFamily:FONT,fontSize:13,color:C.muted,lineHeight:1.65}}>{d}</p></div>)}
+          {[['01','Upload Resume','PDF or Word. No sign-up needed.'],['02','Instant Analysis','9 checks run in seconds in your browser — no AI, no waiting.'],['03','See Your Score','Detailed breakdown with specific findings and fixes.'],['04','Unlock Career Pack','Pay ₹199 once for AI rewrites, cover letter, LinkedIn, interview prep.']].map(([n,t,d])=><div key={n} style={{textAlign:'center'}}><div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#F97316,#EA580C)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',fontFamily:FONT,fontWeight:800,fontSize:16,color:'#fff'}}>{n}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>{t}</h4><p style={{fontFamily:FONT,fontSize:13,color:C.muted,lineHeight:1.65}}>{d}</p></div>)}
         </div>
       </div>
 
@@ -677,7 +677,7 @@ function HomePage({setPage,showAuth,user}){
               {id:'bz',name:'Buzzwords',score:3,status:'warn',headline:'2 generic buzzwords found: "hardworking", "team player"',fix:'Replace with evidence: instead of "team player", describe a specific collaboration win.'},
             ].map(c=><div key={c.id} className="check-row">
               <div style={{width:36,height:36,borderRadius:10,background:c.status==='good'?'#E3FBF3':c.status==='warn'?'#FFF8EC':'#FFF0EC',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{c.status==='good'?'✅':c.status==='warn'?'⚠️':'❌'}</div>
-              <div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4,flexWrap:'wrap',gap:6}}><p style={{fontFamily:FONT,fontWeight:700,fontSize:14,color:C.text}}>{c.name}</p><span style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:sc(c.score)}}>{c.score}/5</span></div><p style={{fontFamily:FONT,fontSize:13,color:C.text,marginBottom:c.fix?4:0}}>{c.headline}</p>{c.fix&&<p style={{fontFamily:FONT,fontSize:12,color:C.primary,background:'#E6F7ED',borderRadius:6,padding:'5px 10px',marginTop:4}}>💡 {c.fix}</p>}</div>
+              <div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4,flexWrap:'wrap',gap:6}}><p style={{fontFamily:FONT,fontWeight:700,fontSize:14,color:C.text}}>{c.name}</p><span style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:sc(c.score)}}>{c.score}/5</span></div><p style={{fontFamily:FONT,fontSize:13,color:C.text,marginBottom:c.fix?4:0}}>{c.headline}</p>{c.fix&&<p style={{fontFamily:FONT,fontSize:12,color:C.primary,background:'#FFF1E6',borderRadius:6,padding:'5px 10px',marginTop:4}}>💡 {c.fix}</p>}</div>
             </div>)}
             <div style={{marginTop:16,textAlign:'center'}}><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'12px 32px',fontSize:14}}>Get My Real Score →</button></div>
           </div>
@@ -734,7 +734,7 @@ function HomePage({setPage,showAuth,user}){
       </div>
 
       {/* CTA */}
-      <div style={{background:'linear-gradient(135deg,#16A34A,#0D9488)',padding:'60px clamp(16px,5vw,56px)',textAlign:'center'}}>
+      <div style={{background:'linear-gradient(135deg,#F97316,#EA580C)',padding:'60px clamp(16px,5vw,56px)',textAlign:'center'}}>
         <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:32,color:'#fff',marginBottom:12}}>Ready to find out your score?</h2>
         <p style={{fontSize:16,color:'rgba(255,255,255,.8)',marginBottom:30,fontFamily:FONT}}>Free instant analysis · No sign-up · Upload PDF or Word</p>
         <button onClick={()=>setPage('analyze')} style={{padding:'16px 44px',fontSize:16,fontWeight:700,background:'#fff',color:C.primary,border:'none',borderRadius:14,cursor:'pointer',fontFamily:FONT}}>Check My Resume Free →</button>
@@ -778,7 +778,7 @@ function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeRes
                 {showPreview&&<div style={{marginTop:10,background:'#FAFBFF',border:`1px solid ${C.border}`,borderRadius:10,padding:16,maxHeight:260,overflowY:'auto',fontSize:13,color:C.text,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:"'Courier New',monospace"}}>{previewText}</div>}
               </div>
             )}
-            <div style={{marginTop:12,background:'#E6F7ED',borderRadius:8,padding:'10px 14px',fontSize:13,color:C.primary,fontFamily:FONT}}>
+            <div style={{marginTop:12,background:'#FFF1E6',borderRadius:8,padding:'10px 14px',fontSize:13,color:C.primary,fontFamily:FONT}}>
               💼 <b>LinkedIn user?</b> Go to your profile → <b>More → Save to PDF</b> → upload that file here
             </div>
           </div>
@@ -853,7 +853,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
   return(
     <div style={{maxWidth:980,margin:'0 auto',padding:'40px clamp(16px,4vw,32px)'}}>
       {/* Header */}
-      <div style={{background:'linear-gradient(135deg,#16A34A,#0D9488)',borderRadius:22,padding:'28px 36px',marginBottom:24,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16,color:'#fff'}}>
+      <div style={{background:'linear-gradient(135deg,#F97316,#EA580C)',borderRadius:22,padding:'28px 36px',marginBottom:24,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:16,color:'#fff'}}>
         <div><p style={{fontSize:12,opacity:.75,marginBottom:4,letterSpacing:'1px',textTransform:'uppercase',fontFamily:FONT}}>Analysis Complete</p><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:24,marginBottom:4}}>{form.targetRole||'Your Resume'}</h2><p style={{fontSize:14,opacity:.85,fontFamily:FONT}}>{form.industry||''}{form.experience?` · ${form.experience} yrs exp`:''}</p></div>
         <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
           {user?<button onClick={saveAnalysis} style={{padding:'9px 18px',borderRadius:10,border:'2px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:FONT}}>💾 Save Report</button>:<button onClick={()=>showAuth('Sign in to save your report and access it from any device')} style={{padding:'9px 18px',borderRadius:10,border:'2px solid rgba(255,255,255,.45)',background:'transparent',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:FONT}}>💾 Save Report</button>}
@@ -883,7 +883,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
                   </div>
                   <p style={{fontSize:13,color:C.text,marginBottom:c.fix?4:0,fontFamily:FONT}}>{c.headline}</p>
                   <p style={{fontSize:12,color:C.muted,marginBottom:c.fix?4:0,fontFamily:FONT}}>{c.detail}</p>
-                  {c.fix&&<p style={{fontSize:12,color:C.primary,background:'#E6F7ED',borderRadius:6,padding:'5px 10px',fontFamily:FONT}}>💡 {c.fix}</p>}
+                  {c.fix&&<p style={{fontSize:12,color:C.primary,background:'#FFF1E6',borderRadius:6,padding:'5px 10px',fontFamily:FONT}}>💡 {c.fix}</p>}
                 </div>
               </div>
             ))}
@@ -937,7 +937,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
           </div>}
           {proTab==='interview'&&<div style={{display:'flex',flexDirection:'column',gap:12}}>
             {proContent.interviewQuestions?.map((q,i)=><div key={i} style={{border:`1px solid ${C.border}`,borderRadius:12,overflow:'hidden'}}>
-              <div style={{background:'#E6F7ED',padding:'12px 18px',display:'flex',alignItems:'flex-start',gap:10}}><span style={{fontFamily:FONT,fontWeight:800,fontSize:13,color:C.primary,minWidth:28}}>Q{i+1}</span><span style={{fontWeight:700,fontSize:14,color:C.text,lineHeight:1.5,fontFamily:FONT}}>{q.q}</span></div>
+              <div style={{background:'#FFF1E6',padding:'12px 18px',display:'flex',alignItems:'flex-start',gap:10}}><span style={{fontFamily:FONT,fontWeight:800,fontSize:13,color:C.primary,minWidth:28}}>Q{i+1}</span><span style={{fontWeight:700,fontSize:14,color:C.text,lineHeight:1.5,fontFamily:FONT}}>{q.q}</span></div>
               <div style={{padding:'14px 18px'}}><p style={{fontSize:13,color:C.text,lineHeight:1.7,marginBottom:8,fontFamily:FONT}}><b>Answer:</b> {q.a}</p><p style={{fontSize:12,color:C.teal,background:'#E3FBF3',borderRadius:8,padding:'6px 12px',lineHeight:1.5,fontFamily:FONT}}>💡 <b>Tip:</b> {q.tip}</p></div>
             </div>)}
           </div>}
@@ -950,7 +950,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
         </div>
       )}
       {paid&&proContent&&(
-        <div style={{marginTop:16,background:'#E6F7ED',border:`1px solid ${C.border}`,borderRadius:10,padding:'12px 16px',fontSize:13,color:C.primary,fontFamily:FONT,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+        <div style={{marginTop:16,background:'#FFF1E6',border:`1px solid ${C.border}`,borderRadius:10,padding:'12px 16px',fontSize:13,color:C.primary,fontFamily:FONT,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
           <span>📁 {user?'Your files are saved to':'Sign in to save these to'} <b>My Saved Reports</b> for <b>7 days</b>{user?' — rename or download anytime.':'.'}</span>
           {user&&<button onClick={()=>setPage('reports')} className="btn-secondary" style={{padding:'7px 16px',fontSize:12,whiteSpace:'nowrap'}}>View My Reports →</button>}
         </div>
@@ -1074,7 +1074,7 @@ function BlogPage({user,setPage}){
           {post.html
             ?<div className="blog-body" style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85}} dangerouslySetInnerHTML={{__html:post.body}}/>
             :<div style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85,whiteSpace:'pre-wrap'}}>{post.body}</div>}
-          <div className="card" style={{marginTop:32,padding:'24px 28px',textAlign:'center',background:'linear-gradient(135deg,#E6F7ED,#FFFBEC)'}}>
+          <div className="card" style={{marginTop:32,padding:'24px 28px',textAlign:'center',background:'linear-gradient(135deg,#FFF1E6,#FFFBEC)'}}>
             <p style={{fontFamily:FONT,fontWeight:700,fontSize:16,color:C.text,marginBottom:14}}>Want to know how your resume scores?</p>
             <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'12px 28px',fontSize:14}}>Analyse My Resume Free →</button>
           </div>
@@ -1204,7 +1204,7 @@ function BlogAdmin(){
 function AboutPage({setPage}){
   return(
     <div>
-      <div style={{background:'linear-gradient(155deg,#E8FBEF 0%,#F0FBF4 50%,#FFFBEC 100%)',padding:'80px clamp(16px,5vw,56px) 60px',textAlign:'center'}}>
+      <div style={{background:'linear-gradient(155deg,#FFF4EC 0%,#FFF8F0 50%,#FFFBEC 100%)',padding:'80px clamp(16px,5vw,56px) 60px',textAlign:'center'}}>
         <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(26px,4.5vw,48px)',color:C.text,marginBottom:16}}>About ResumebhAI</h1>
         <p style={{fontSize:17,color:C.muted,maxWidth:560,margin:'0 auto',lineHeight:1.75,fontFamily:FONT}}>We built the resume tool we wished existed — honest analysis, Indian market savvy, and zero subscription traps.</p>
       </div>
@@ -1213,7 +1213,7 @@ function AboutPage({setPage}){
           <div><Tag text="Our Story"/><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:26,color:C.text,margin:'14px 0 14px'}}>Built for the Indian job seeker</h2><p style={{fontSize:15,color:C.muted,lineHeight:1.8,marginBottom:12,fontFamily:FONT}}>Global resume tools don't understand Naukri, Indian ATS, or the conventions at L&T, TCS, or Shapoorji. We do.</p><p style={{fontSize:15,color:C.muted,lineHeight:1.8,fontFamily:FONT}}>Free analysis, always. Pay ₹199 once for the AI career pack — no subscriptions, no monthly charges.</p></div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>{[['🎯','Mission-Driven','Help every professional land their next role'],['🤖','AI-Powered','Recruiter-grade analysis + instant algorithmic checks'],['🔒','Privacy First','Résumé processed in your browser — never stored'],['🇮🇳','India-First','Built for Naukri, Indian ATS, and Indian hiring']].map(([i,t,d])=><div key={t} className="card" style={{padding:18}}><div style={{fontSize:20,marginBottom:8}}>{i}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text,marginBottom:5}}>{t}</h4><p style={{fontSize:12,color:C.muted,lineHeight:1.6,fontFamily:FONT}}>{d}</p></div>)}</div>
         </div>
-        <div style={{background:'linear-gradient(135deg,#16A34A,#0D9488)',borderRadius:20,padding:'44px 36px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20,textAlign:'center',marginBottom:60}}>
+        <div style={{background:'linear-gradient(135deg,#F97316,#EA580C)',borderRadius:20,padding:'44px 36px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20,textAlign:'center',marginBottom:60}}>
           {[['Free','Full analysis, always'],['₹199','One-time career pack'],['9','Algorithmic checks'],['0','Monthly charges']].map(([v,l])=><div key={l}><div style={{fontFamily:FONT,fontWeight:800,fontSize:28,color:'#fff',marginBottom:5}}>{v}</div><div style={{fontSize:13,color:'rgba(255,255,255,.72)',fontFamily:FONT}}>{l}</div></div>)}
         </div>
         <div style={{textAlign:'center'}}><h2 style={{fontFamily:FONT,fontWeight:700,fontSize:24,color:C.text,marginBottom:14}}>Ready to check your resume?</h2><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'14px 40px',fontSize:16,borderRadius:14}}>Start Free Analysis →</button></div>
