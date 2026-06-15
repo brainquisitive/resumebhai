@@ -1084,7 +1084,21 @@ const DEFAULT_POSTS=[
   {id:'d4',tag:'Keywords',title:'Power Words That Make Recruiters Notice You',subheading:'"Managed" and "led" are invisible. These verbs land with real impact.',imageUrl:'https://picsum.photos/seed/powerwords/800/420',quote:'The formula: [Strong Verb] + [What You Did] + [How] + [Quantified Result]',author:'ResumebhAI Team',date:'January 2, 2025',read:'7 min',body:`Leadership: Orchestrated, Championed, Spearheaded, Galvanised\nBuilding: Engineered, Architected, Launched, Pioneered\nImprovement: Streamlined, Overhauled, Revamped, Optimised\nGrowth: Scaled, Accelerated, Amplified, Drove\nAnalysis: Synthesised, Diagnosed, Evaluated, Forecasted\n\nWeak: "Managed social media and increased engagement"\nStrong: "Orchestrated a 4-platform strategy driving 340% organic growth and ₹85L in attributed pipeline within 6 months"`},
 ];
 
+// Converts a Google Drive "share" link (which is an HTML viewer page, not an
+// image) into a direct-image URL so pasted Drive links render correctly.
+const driveImageUrl = url => {
+  if(!url) return url;
+  const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([^/?&]+)/);
+  return m ? `https://lh3.googleusercontent.com/d/${m[1]}` : url;
+};
+// Rewrites any Google Drive share links used as <img src="..."> inside
+// rich-text post bodies into direct-image URLs.
+const fixDriveImagesInHtml = html => html ? html.replace(
+  /(<img[^>]*\bsrc=["'])([^"']*drive\.google\.com[^"']*)(["'])/g,
+  (_,pre,url,post)=>pre+driveImageUrl(url)+post
+) : html;
 function PostImage({src,alt,height}){
+  src = driveImageUrl(src);
   if(!src) return <div style={{width:'100%',height,background:`linear-gradient(135deg,${C.primary}22,${C.purple}22)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:C.muted,fontFamily:FONT}}>📷 Image coming soon</div>;
   return <img src={src} alt={alt} style={{width:'100%',height,objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>;
 }
@@ -1108,7 +1122,7 @@ function BlogPage({user,setPage}){
           <p style={{fontFamily:FONT,fontSize:13,color:C.muted,marginBottom:24}}>{post.author} · {post.date} · {post.read} read</p>
           {post.quote&&<blockquote style={{borderLeft:`4px solid ${C.primary}`,paddingLeft:18,margin:'0 0 24px',fontStyle:'italic',fontSize:16,color:C.text,lineHeight:1.7,fontFamily:FONT}}>"{post.quote}"</blockquote>}
           {post.html
-            ?<div className="blog-body" style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85}} dangerouslySetInnerHTML={{__html:post.body}}/>
+            ?<div className="blog-body" style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85}} dangerouslySetInnerHTML={{__html:fixDriveImagesInHtml(post.body)}}/>
             :<div style={{fontFamily:FONT,fontSize:15,color:C.text,lineHeight:1.85,whiteSpace:'pre-wrap'}}>{post.body}</div>}
           <div className="card" style={{marginTop:32,padding:'24px 28px',textAlign:'center',background:'linear-gradient(135deg,#FFF1E6,#FFFBEC)'}}>
             <p style={{fontFamily:FONT,fontWeight:700,fontSize:16,color:C.text,marginBottom:14}}>Want to know how your resume scores?</p>
@@ -1211,7 +1225,7 @@ function BlogAdmin(){
       <p style={{fontSize:14,color:C.muted,marginBottom:28,fontFamily:FONT}}>Admin only · {FB_READY?'Saved to Firebase':'Saved locally (configure Firebase for live blog)'}.</p>
       <div className="card" style={{padding:28,marginBottom:28}}>
         <h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text,marginBottom:18}}>{form.id?'Edit Post':'Add New Post'}</h3>
-        {form.imageUrl&&<img src={form.imageUrl} alt="" style={{width:'100%',height:160,objectFit:'cover',borderRadius:10,marginBottom:16}} onError={e=>e.target.style.display='none'}/>}
+        {form.imageUrl&&<img src={driveImageUrl(form.imageUrl)} alt="" style={{width:'100%',height:160,objectFit:'cover',borderRadius:10,marginBottom:16}} onError={e=>e.target.style.display='none'}/>}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
           {[['title','Title *','Post title'],['subheading','Subheading','One-line shown in cards'],['tag','Tag','ATS Strategy, Writing Tips...'],['imageUrl','Image URL','https://...'],['quote','Pull Quote (optional)','Short memorable line'],['author','Author','ResumebhAI Team'],['date','Date (blank = today)','15 June 2025']].map(([k,l,p])=><div key={k}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{l}</label><input value={form[k]} onChange={e=>set(k,e.target.value)} placeholder={p} style={{padding:'9px 12px'}}/>
             {k==='imageUrl'&&<label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,marginTop:6,cursor:'pointer'}}>{uploadingCover?<><Spinner/>Uploading…</>:'📁 Upload cover image to Drive'}<input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} style={{display:'none'}}/></label>}
@@ -1230,7 +1244,7 @@ function BlogAdmin(){
             <label className="btn-secondary" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',fontSize:12,cursor:'pointer'}}>{uploadingInline?<><Spinner/>Uploading…</>:'📁 Upload to Drive & insert'}<input type="file" accept="image/*" onChange={handleInlineUpload} disabled={uploadingInline} style={{display:'none'}}/></label>
           </div>}
           {preview
-            ?<div className="blog-body" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:'14px 16px',minHeight:180,maxHeight:400,overflowY:'auto',fontFamily:FONT,fontSize:14,color:C.text}} dangerouslySetInnerHTML={{__html:form.body}}/>
+            ?<div className="blog-body" style={{border:`1px solid ${C.border}`,borderRadius:10,padding:'14px 16px',minHeight:180,maxHeight:400,overflowY:'auto',fontFamily:FONT,fontSize:14,color:C.text}} dangerouslySetInnerHTML={{__html:fixDriveImagesInHtml(form.body)}}/>
             :<textarea ref={bodyRef} value={form.body} onChange={e=>set('body',e.target.value)} placeholder={form.html?'Write HTML directly, or use the buttons above to insert images, quotes, headings etc.':'Full article text. Blank lines = paragraphs.'} rows={12} style={{padding:'10px 12px',resize:'vertical',fontFamily:form.html?"'Courier New',monospace":'inherit',fontSize:13}}/>}
         </div>
         {msg&&<div style={{background:msg.startsWith('✅')?'#E3FBF3':'#FFF0EC',border:`1px solid ${msg.startsWith('✅')?'#9FE1CB':'#FFCBB8'}`,borderRadius:8,padding:'9px 13px',fontSize:13,color:msg.startsWith('✅')?'#0A7D5A':'#C73800',marginBottom:12,fontFamily:FONT}}>{msg}</div>}
@@ -1238,7 +1252,7 @@ function BlogAdmin(){
       </div>
       {posts.length>0&&<div><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text,marginBottom:14}}>Published Posts ({posts.length})</h3>
         <div style={{display:'flex',flexDirection:'column',gap:10}}>{posts.map(p=><div key={p.id} className="card" style={{padding:'14px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
-          <div style={{display:'flex',gap:12,alignItems:'center'}}>{p.imageUrl&&<img src={p.imageUrl} alt="" style={{width:56,height:40,objectFit:'cover',borderRadius:7}} onError={e=>e.target.style.display='none'}/>}<div><p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{p.title}</p><p style={{fontFamily:FONT,fontSize:12,color:C.muted}}>{p.tag} · {p.date}</p></div></div>
+          <div style={{display:'flex',gap:12,alignItems:'center'}}>{p.imageUrl&&<img src={driveImageUrl(p.imageUrl)} alt="" style={{width:56,height:40,objectFit:'cover',borderRadius:7}} onError={e=>e.target.style.display='none'}/>}<div><p style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text}}>{p.title}</p><p style={{fontFamily:FONT,fontSize:12,color:C.muted}}>{p.tag} · {p.date}</p></div></div>
           <div style={{display:'flex',gap:8}}><button onClick={()=>{setForm({...blank,...p});window.scrollTo(0,0);}} className="btn-secondary" style={{padding:'6px 14px',fontSize:12}}>Edit</button><button onClick={()=>del(p.id)} style={{padding:'6px 14px',fontSize:12,borderRadius:9,border:'none',background:'#FFF0EC',color:C.danger,cursor:'pointer',fontFamily:FONT,fontWeight:700}}>Delete</button></div>
         </div>)}</div>
       </div>}
