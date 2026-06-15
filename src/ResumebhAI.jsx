@@ -833,11 +833,11 @@ function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeRes
           <div className="card" style={{padding:28,marginBottom:20}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><span style={{fontSize:20}}>🎯</span><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text}}>Your Target</h3><span style={{fontSize:12,color:C.muted,fontFamily:FONT}}>Required — helps tailor your analysis and career pack</span></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-              {[{key:'industry',label:'Industry *',ph:'e.g. Construction, Finance, IT'},{key:'targetRole',label:'Target Role *',ph:'e.g. Project Manager'},{key:'experience',label:'Years of Experience *',ph:'e.g. 8',type:'number'}].map(f=><div key={f.key}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{f.label}</label><input type={f.type||'text'} value={form[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{padding:'10px 12px'}}/></div>)}
+              {[{key:'industry',label:'Industry *',ph:'e.g. Construction, Finance, IT'},{key:'targetRole',label:'Target Role *',ph:'e.g. Project Manager'},{key:'experience',label:'Years of Experience *',ph:'e.g. 8',type:'number'}].map(f=><div key={f.key}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{f.label}</label><input type={f.type||'text'} inputMode={f.key==='experience'?'numeric':undefined} value={form[f.key]} onChange={e=>{let v=e.target.value;if(f.key==='experience')v=v.replace(/\D/g,'').slice(0,2);setForm(p=>({...p,[f.key]:v}));}} placeholder={f.ph} style={{padding:'10px 12px'}}/></div>)}
             </div>
-            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description * (at least 50 words — improves career pack)</label>
-            <textarea value={form.jobDescription} onChange={e=>setForm(p=>({...p,jobDescription:e.target.value}))} placeholder="Paste the job description for targeted keyword matching and cover letter… (minimum 50 words)" rows={4} style={{padding:'10px 12px',resize:'vertical'}}/>
-            <p style={{fontSize:12,color:form.jobDescription.trim().split(/\s+/).filter(Boolean).length>=50?'#0A7D5A':C.muted,marginTop:5,fontFamily:FONT}}>{form.jobDescription.trim().split(/\s+/).filter(Boolean).length} / 50 words minimum</p>
+            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description * (at least 15 words — improves career pack)</label>
+            <textarea value={form.jobDescription} onChange={e=>setForm(p=>({...p,jobDescription:e.target.value}))} placeholder="Paste the job description for targeted keyword matching and cover letter… (minimum 15 words)" rows={4} style={{padding:'10px 12px',resize:'vertical'}}/>
+            <p style={{fontSize:12,color:form.jobDescription.trim().split(/\s+/).filter(Boolean).length>=15?'#0A7D5A':C.muted,marginTop:5,fontFamily:FONT}}>{form.jobDescription.trim().split(/\s+/).filter(Boolean).length} / 15 words minimum</p>
           </div>
           {error&&<div style={{background:'#FFF0EC',border:'1px solid #FFCBB8',borderRadius:10,padding:'12px 16px',fontSize:14,color:'#C73800',marginBottom:16,fontFamily:FONT}}>⚠️ {error}</div>}
           <button onClick={analyzeResume} className="btn-primary" style={{width:'100%',padding:'18px',fontSize:17,borderRadius:14}}>🔍 Analyse My Resume Free</button>
@@ -1351,7 +1351,7 @@ export default function App(){
     if(!b64&&!fileText){setError('Please upload a resume file.');return;}
     if(!algoResult){setError('Could not extract text from this file. Try a different file.');return;}
     if(!form.industry.trim()||!form.targetRole.trim()||!String(form.experience).trim()){setError('Please fill in Industry, Target Role, and Years of Experience.');return;}
-    if(form.jobDescription.trim().split(/\s+/).filter(Boolean).length<50){setError('Please paste a Job Description of at least 50 words.');return;}
+    if(form.jobDescription.trim().split(/\s+/).filter(Boolean).length<15){setError('Please paste a Job Description of at least 15 words.');return;}
     if(!user){
       setPendingAnalysis(true);
       showAuth('Create a free account to see your resume analysis');
