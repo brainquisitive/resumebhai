@@ -1100,7 +1100,7 @@ const fixDriveImagesInHtml = html => html ? html.replace(
 function PostImage({src,alt,height}){
   src = driveImageUrl(src);
   if(!src) return <div style={{width:'100%',height,background:`linear-gradient(135deg,${C.primary}22,${C.purple}22)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:C.muted,fontFamily:FONT}}>📷 Image coming soon</div>;
-  return <img src={src} alt={alt} style={{width:'100%',height,objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>;
+  return <div style={{width:'100%',height,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}><img src={src} alt={alt} style={{width:'100%',height:'100%',objectFit:'contain'}} onError={e=>{e.target.parentElement.style.display='none';}}/></div>;
 }
 
 function BlogPage({user,setPage}){
