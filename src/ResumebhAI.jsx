@@ -1183,11 +1183,21 @@ function BlogAdmin(){
   };
   const save=async()=>{
     if(!form.title||!form.body){setMsg('Title and body are required.');return;}
-    setSaving(true);
+    setSaving(true);setMsg('');
     const entry={...form,id:form.id||Date.now().toString(),date:form.date||new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})};
-    await DB.savePost(entry);setPosts(p=>[entry,...p.filter(x=>x.id!==entry.id)]);setForm(blank);setMsg('✅ Post saved!');setSaving(false);setTimeout(()=>setMsg(''),3000);
+    try{
+      await DB.savePost(entry);setPosts(p=>[entry,...p.filter(x=>x.id!==entry.id)]);setForm(blank);setMsg('✅ Post saved!');setTimeout(()=>setMsg(''),3000);
+    }catch(err){
+      setMsg('❌ Save failed: '+(err?.message||err));
+    }finally{
+      setSaving(false);
+    }
   };
-  const del=async id=>{if(!window.confirm('Delete this post?'))return;await DB.deletePost(id);setPosts(p=>p.filter(x=>x.id!==id));};
+  const del=async id=>{
+    if(!window.confirm('Delete this post?'))return;
+    try{await DB.deletePost(id);setPosts(p=>p.filter(x=>x.id!==id));}
+    catch(err){setMsg('❌ Delete failed: '+(err?.message||err));}
+  };
   return(
     <div style={{maxWidth:820,margin:'0 auto',padding:'50px clamp(16px,4vw,32px)'}}>
       <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,marginBottom:8}}>✍️ Manage Blog</h2>
