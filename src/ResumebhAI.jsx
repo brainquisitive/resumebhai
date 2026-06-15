@@ -236,8 +236,15 @@ const loadFirebase = async () => {
   if(!FB_READY)return null;
   try {
     await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+    await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js');
     await _loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
     if(!window.firebase.apps.length) window.firebase.initializeApp(FB_CONFIG);
+    // Wait for Firebase Auth to restore any persisted session so Firestore
+    // requests carry the user's auth token — otherwise writes on a fresh
+    // page load (e.g. after reload) are unauthenticated and rules reject them.
+    await new Promise(resolve=>{
+      const unsub=window.firebase.auth().onAuthStateChanged(()=>{unsub();resolve();});
+    });
     _fbDb=window.firebase.firestore(); return _fbDb;
   } catch{return null;}
 };
