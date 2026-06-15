@@ -609,9 +609,9 @@ function Navbar({page,setPage,user,onLogout,showAuth}){
 function Footer({setPage}){
   return(
     <footer style={{background:C.text,color:'rgba(255,255,255,.65)',padding:'44px clamp(16px,5vw,56px)',display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:40}}>
-      <div><div style={{marginBottom:14}}><Logo size="sm" light/></div><p style={{fontSize:13,lineHeight:1.7,maxWidth:260,color:'rgba(255,255,255,.55)',fontFamily:FONT}}>AI-powered resume analysis for the Indian job market. Free instant analysis · ₹199 career pack · No subscription.</p></div>
+      <div><div style={{marginBottom:14}}><Logo size="sm" light/></div><p style={{fontSize:13,lineHeight:1.7,maxWidth:260,color:'rgba(255,255,255,.55)',fontFamily:FONT}}>Smart resume analysis for the Indian job market. Free instant analysis · ₹199 career pack · No subscription.</p></div>
       <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Pages</p>{['Home','Analyze','Blog','About'].map(n=><div key={n} onClick={()=>setPage(n.toLowerCase())} style={{fontSize:13,marginBottom:9,cursor:'pointer',fontFamily:FONT}} onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.65)'}>{n}</div>)}</div>
-      <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Resources</p>{[['ATS Guide','blog'],['Resume Tips','blog'],['Career Blog','blog'],['Free Resume Check','analyze']].map(([n,p])=><div key={n} onClick={()=>setPage(p)} style={{fontSize:13,marginBottom:9,cursor:'pointer',fontFamily:FONT}} onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.65)'}>{n}</div>)}</div>
+      <div><p style={{fontWeight:700,fontSize:13,color:'#fff',marginBottom:14,fontFamily:FONT}}>Resources</p>{[['Career Blog','blog'],['Free Resume Check','analyze']].map(([n,p])=><div key={n} onClick={()=>setPage(p)} style={{fontSize:13,marginBottom:9,cursor:'pointer',fontFamily:FONT}} onMouseEnter={e=>e.target.style.color='#fff'} onMouseLeave={e=>e.target.style.color='rgba(255,255,255,.65)'}>{n}</div>)}</div>
     </footer>
   );
 }
@@ -625,17 +625,17 @@ function HomePage({setPage,showAuth,user}){
     <div>
       {/* Hero */}
       <div style={{background:'linear-gradient(155deg,#FFF4EC 0%,#FFF8F0 50%,#FFFBEC 100%)',padding:'80px clamp(16px,5vw,56px) 70px',textAlign:'center'}}>
-        <Tag text="✦  India's AI Resume Checker · Free Instant Analysis"/>
+        <Tag text="✦  India's Resume Checker · Free Instant Analysis"/>
         <h1 style={{fontFamily:FONT,fontWeight:800,fontSize:'clamp(32px,5vw,58px)',color:C.text,margin:'22px 0 18px',lineHeight:1.1,letterSpacing:'-1px'}}>Is your resume<br/><span style={{backgroundImage:'linear-gradient(135deg,#F97316,#EA580C)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>strong enough to get hired?</span></h1>
         <p style={{fontSize:18,color:C.muted,maxWidth:560,margin:'0 auto 12px',lineHeight:1.7,fontFamily:FONT}}>Get an instant, detailed analysis of your resume — <b style={{color:C.text}}>completely free</b>. Find exactly what's holding you back and fix it.</p>
-        <p style={{fontSize:14,color:C.muted,marginBottom:36,fontFamily:FONT}}>No sign-up required for free analysis · ₹199 for AI rewrites & career pack</p>
+        <p style={{fontSize:14,color:C.muted,marginBottom:36,fontFamily:FONT}}>No sign-up required for free analysis · ₹199 for rewrites & career pack</p>
         <div style={{display:'flex',gap:14,justifyContent:'center',flexWrap:'wrap'}}>
           <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'16px 44px',fontSize:17,borderRadius:14}}>Check My Resume Free →</button>
           <button onClick={()=>setPage('blog')} className="btn-secondary" style={{padding:'16px 28px',fontSize:16}}>Read Blog</button>
         </div>
         <p style={{fontSize:13,color:C.muted,marginTop:14,fontFamily:FONT}}>PDF or Word (.docx) · No sign-up needed · Instant results</p>
         <div style={{display:'flex',gap:40,justifyContent:'center',marginTop:44,flexWrap:'wrap'}}>
-          {[['Free','Full 9-point instant analysis'],['₹199','Complete AI career pack'],['Instant','Results in seconds']].map(([v,l])=><div key={l}><div style={{fontFamily:FONT,fontWeight:800,fontSize:26,color:C.primary}}>{v}</div><div style={{fontSize:13,color:C.muted,marginTop:2,fontFamily:FONT}}>{l}</div></div>)}
+          {[['Free','Full 9-point instant analysis'],['₹199','Complete career pack'],['Instant','Results in seconds']].map(([v,l])=><div key={l}><div style={{fontFamily:FONT,fontWeight:800,fontSize:26,color:C.primary}}>{v}</div><div style={{fontSize:13,color:C.muted,marginTop:2,fontFamily:FONT}}>{l}</div></div>)}
         </div>
       </div>
 
@@ -659,9 +659,9 @@ function HomePage({setPage,showAuth,user}){
             </div>
             <div className="card" style={{padding:32,display:'flex',flexDirection:'column',position:'relative',border:`2px solid ${C.primary}`}}>
               <div style={{position:'absolute',top:-13,right:24,background:'linear-gradient(135deg,#F97316,#EA580C)',color:'#fff',fontFamily:FONT,fontWeight:700,fontSize:11,padding:'5px 14px',borderRadius:20}}>Most popular</div>
-              <div style={{marginBottom:6}}><Tag text="AI Career Pack" variant="paid"/></div>
+              <div style={{marginBottom:6}}><Tag text="Career Pack" variant="paid"/></div>
               <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:24,color:C.text,margin:'14px 0 4px'}}>Career Pack</h3>
-              <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For when you're ready to apply — AI rewrites & prep</p>
+              <p style={{fontSize:13,color:C.muted,marginBottom:18,fontFamily:FONT}}>For when you're ready to apply — rewrites & prep</p>
               <div style={{fontFamily:FONT,fontWeight:800,fontSize:40,color:C.text,marginBottom:4}}>₹199</div>
               <p style={{fontSize:13,color:C.muted,marginBottom:24,fontFamily:FONT}}>one-time · no subscription</p>
               <button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'13px',fontSize:15,borderRadius:12,marginBottom:20}}>Get Career Pack — ₹199</button>
@@ -677,8 +677,8 @@ function HomePage({setPage,showAuth,user}){
       {/* How it works */}
       <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.bg}}>
         <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:44}}>How it works</h2>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:28,maxWidth:860,margin:'0 auto'}}>
-          {[['01','Upload Resume','PDF or Word. No sign-up needed.'],['02','Instant Analysis','9 checks run in seconds in your browser — no AI, no waiting.'],['03','See Your Score','Detailed breakdown with specific findings and fixes.'],['04','Unlock Career Pack','Pay ₹199 once for AI rewrites, cover letter, LinkedIn, interview prep.']].map(([n,t,d])=><div key={n} style={{textAlign:'center'}}><div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#F97316,#EA580C)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',fontFamily:FONT,fontWeight:800,fontSize:16,color:'#fff'}}>{n}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>{t}</h4><p style={{fontFamily:FONT,fontSize:13,color:C.muted,lineHeight:1.65}}>{d}</p></div>)}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'clamp(12px,2.5vw,28px)',maxWidth:1100,margin:'0 auto'}}>
+          {[['01','Upload Resume','PDF or Word. No sign-up needed.'],['02','Instant Analysis','9 checks run in seconds in your browser — instantly.'],['03','See Your Score','Detailed breakdown with specific findings and fixes.'],['04','Unlock Career Pack','Pay ₹199 once for rewrites, cover letter, LinkedIn, interview prep.']].map(([n,t,d])=><div key={n} style={{textAlign:'center'}}><div style={{width:52,height:52,borderRadius:14,background:'linear-gradient(135deg,#F97316,#EA580C)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px',fontFamily:FONT,fontWeight:800,fontSize:16,color:'#fff'}}>{n}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text,marginBottom:6}}>{t}</h4><p style={{fontFamily:FONT,fontSize:13,color:C.muted,lineHeight:1.65}}>{d}</p></div>)}
         </div>
       </div>
 
@@ -686,10 +686,10 @@ function HomePage({setPage,showAuth,user}){
       <div style={{padding:'64px clamp(16px,5vw,56px)',background:C.surface}}>
         <div style={{maxWidth:960,margin:'0 auto'}}>
           <h2 style={{fontFamily:FONT,fontWeight:800,fontSize:30,color:C.text,textAlign:'center',marginBottom:10}}>Here's what you'll see</h2>
-          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:36,fontFamily:FONT}}>A real preview of your free report, and what's inside the ₹199 AI Career Pack</p>
+          <p style={{textAlign:'center',fontSize:15,color:C.muted,marginBottom:36,fontFamily:FONT}}>A real preview of your free report, and what's inside the ₹199 Career Pack</p>
 
           {/* Free report sample */}
-          <div style={{marginBottom:14}}><Tag text="Free — Instant Report Sample" variant="free"/></div>
+          <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:22,color:C.text,marginBottom:18}}>Free — Instant Report Sample</h3>
           <div className="card" style={{padding:28,marginBottom:48}}>
             <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:24,flexWrap:'wrap'}}>
               <CircleScore score={3.2} size={100}/>
@@ -712,7 +712,7 @@ function HomePage({setPage,showAuth,user}){
           </div>
 
           {/* Paid career pack samples */}
-          <div style={{marginBottom:14}}><Tag text="₹199 — AI Career Pack Samples" variant="paid"/></div>
+          <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:22,color:C.text,marginBottom:18}}>₹199 — Career Pack Samples</h3>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:24}}>
             <div className="card" style={{padding:24}}>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}><span style={{fontSize:20}}>🔑</span><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:15,color:C.text}}>Missing Keywords</h4></div>
@@ -758,7 +758,7 @@ function HomePage({setPage,showAuth,user}){
               </div>
             </div>
           </div>
-          <div style={{marginTop:32,textAlign:'center'}}><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'14px 36px',fontSize:15}}>Unlock the AI Career Pack — ₹199</button></div>
+          <div style={{marginTop:32,textAlign:'center'}}><button onClick={()=>setPage('analyze')} className="btn-primary" style={{padding:'14px 36px',fontSize:15}}>Unlock the Career Pack — ₹199</button></div>
         </div>
       </div>
 
@@ -812,17 +812,17 @@ function AnalyzePage({form,setForm,file,handleFile,loading,loadingMsg,analyzeRes
             </div>
           </div>
           <div className="card" style={{padding:28,marginBottom:20}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><span style={{fontSize:20}}>🎯</span><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text}}>Your Target</h3><span style={{fontSize:12,color:C.muted,fontFamily:FONT}}>Required — helps tailor your analysis and AI career pack</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><span style={{fontSize:20}}>🎯</span><h3 style={{fontFamily:FONT,fontWeight:700,fontSize:17,color:C.text}}>Your Target</h3><span style={{fontSize:12,color:C.muted,fontFamily:FONT}}>Required — helps tailor your analysis and career pack</span></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
               {[{key:'industry',label:'Industry *',ph:'e.g. Construction, Finance, IT'},{key:'targetRole',label:'Target Role *',ph:'e.g. Project Manager'},{key:'experience',label:'Years of Experience *',ph:'e.g. 8',type:'number'}].map(f=><div key={f.key}><label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>{f.label}</label><input type={f.type||'text'} value={form[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{padding:'10px 12px'}}/></div>)}
             </div>
-            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description * (at least 50 words — improves AI career pack)</label>
+            <label style={{fontWeight:700,fontSize:12,color:C.text,display:'block',marginBottom:5,textTransform:'uppercase',letterSpacing:'.6px',fontFamily:FONT}}>Job Description * (at least 50 words — improves career pack)</label>
             <textarea value={form.jobDescription} onChange={e=>setForm(p=>({...p,jobDescription:e.target.value}))} placeholder="Paste the job description for targeted keyword matching and cover letter… (minimum 50 words)" rows={4} style={{padding:'10px 12px',resize:'vertical'}}/>
             <p style={{fontSize:12,color:form.jobDescription.trim().split(/\s+/).filter(Boolean).length>=50?'#0A7D5A':C.muted,marginTop:5,fontFamily:FONT}}>{form.jobDescription.trim().split(/\s+/).filter(Boolean).length} / 50 words minimum</p>
           </div>
           {error&&<div style={{background:'#FFF0EC',border:'1px solid #FFCBB8',borderRadius:10,padding:'12px 16px',fontSize:14,color:'#C73800',marginBottom:16,fontFamily:FONT}}>⚠️ {error}</div>}
           <button onClick={analyzeResume} className="btn-primary" style={{width:'100%',padding:'18px',fontSize:17,borderRadius:14}}>🔍 Analyse My Resume Free</button>
-          <p style={{textAlign:'center',fontSize:13,color:C.muted,marginTop:10,fontFamily:FONT}}>Instant results · No account needed · Unlock AI career pack for ₹199 after</p>
+          <p style={{textAlign:'center',fontSize:13,color:C.muted,marginTop:10,fontFamily:FONT}}>Instant results · No account needed · Unlock career pack for ₹199 after</p>
         </>
       )}
     </div>
@@ -901,7 +901,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
           </div>
           <div className="card" style={{padding:24}}>
             <h3 style={{fontFamily:FONT,fontWeight:700,fontSize:16,color:C.text,marginBottom:4}}>📋 Detailed Checks</h3>
-            <p style={{fontSize:13,color:C.muted,marginBottom:16,fontFamily:FONT}}>Analysed instantly in your browser — no AI needed</p>
+            <p style={{fontSize:13,color:C.muted,marginBottom:16,fontFamily:FONT}}>Analysed instantly in your browser</p>
             {algo.checks.map(c=>(
               <div key={c.id} className="check-row">
                 <div style={{width:32,height:32,borderRadius:9,background:c.status==='good'?'#E3FBF3':c.status==='warn'?'#FFF8EC':'#FFF0EC',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>{c.status==='good'?'✅':c.status==='warn'?'⚠️':'❌'}</div>
@@ -920,7 +920,7 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
         </div>
       )}
 
-      {/* AI Career Pack */}
+      {/* Career Pack */}
       {!paid?(
         <div className="card" style={{padding:0,overflow:'hidden',position:'relative'}}>
           <div className="blur-lock" style={{padding:28}}>
@@ -929,8 +929,8 @@ function ResultsPage({analysis,algoResult,form,saveAnalysis,setPage,user,analysi
           </div>
           <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'rgba(243,246,255,0.78)',backdropFilter:'blur(3px)',padding:28,textAlign:'center'}}>
             <div style={{fontSize:40,marginBottom:10}}>🔒</div>
-            <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:21,color:C.text,marginBottom:8}}>Unlock Your AI Career Pack</h3>
-            <p style={{fontSize:14,color:C.muted,maxWidth:440,marginBottom:16,lineHeight:1.7,fontFamily:FONT}}>Get AI-powered missing keywords, rewritten ATS & visual resumes, cover letter, LinkedIn & Naukri content, and 12 interview Q&As.</p>
+            <h3 style={{fontFamily:FONT,fontWeight:800,fontSize:21,color:C.text,marginBottom:8}}>Unlock Your Career Pack</h3>
+            <p style={{fontSize:14,color:C.muted,maxWidth:440,marginBottom:16,lineHeight:1.7,fontFamily:FONT}}>Get missing keywords, rewritten ATS & visual resumes, cover letter, LinkedIn & Naukri content, and 12 interview Q&As.</p>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',marginBottom:20}}>
               {['🔑 Missing Keywords','🤖 ATS Resume PDF','🎨 Visual Resume PDF','✉️ Cover Letter','💼 LinkedIn & Naukri','🎯 12 Interview Q&As'].map(f=><span key={f} className="tag" style={{background:'#fff',color:C.text,border:`1px solid ${C.border}`,fontSize:11,fontFamily:FONT}}>{f}</span>)}
             </div>
@@ -1240,7 +1240,7 @@ function AboutPage({setPage}){
       <div style={{maxWidth:980,margin:'0 auto',padding:'60px clamp(16px,4vw,32px)'}}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:56,alignItems:'center',marginBottom:60}}>
           <div><Tag text="Our Story"/><h2 style={{fontFamily:FONT,fontWeight:800,fontSize:26,color:C.text,margin:'14px 0 14px'}}>Built for the Indian job seeker</h2><p style={{fontSize:15,color:C.muted,lineHeight:1.8,marginBottom:12,fontFamily:FONT}}>Global resume tools don't understand Naukri, Indian ATS, or the conventions at L&T, TCS, or Shapoorji. We do.</p><p style={{fontSize:15,color:C.muted,lineHeight:1.8,fontFamily:FONT}}>Free analysis, always. Pay ₹199 once for the AI career pack — no subscriptions, no monthly charges.</p></div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>{[['🎯','Mission-Driven','Help every professional land their next role'],['🤖','AI-Powered','Recruiter-grade analysis + instant algorithmic checks'],['🔒','Privacy First','Résumé processed in your browser — never stored'],['🇮🇳','India-First','Built for Naukri, Indian ATS, and Indian hiring']].map(([i,t,d])=><div key={t} className="card" style={{padding:18}}><div style={{fontSize:20,marginBottom:8}}>{i}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text,marginBottom:5}}>{t}</h4><p style={{fontSize:12,color:C.muted,lineHeight:1.6,fontFamily:FONT}}>{d}</p></div>)}</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>{[['🎯','Mission-Driven','Help every professional land their next role'],['⚡','Smart Analysis','Recruiter-grade analysis + instant algorithmic checks'],['🔒','Privacy First','Résumé processed in your browser — never stored'],['🇮🇳','India-First','Built for Naukri, Indian ATS, and Indian hiring']].map(([i,t,d])=><div key={t} className="card" style={{padding:18}}><div style={{fontSize:20,marginBottom:8}}>{i}</div><h4 style={{fontFamily:FONT,fontWeight:700,fontSize:13,color:C.text,marginBottom:5}}>{t}</h4><p style={{fontSize:12,color:C.muted,lineHeight:1.6,fontFamily:FONT}}>{d}</p></div>)}</div>
         </div>
         <div style={{background:'linear-gradient(135deg,#F97316,#EA580C)',borderRadius:20,padding:'44px 36px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20,textAlign:'center',marginBottom:60}}>
           {[['Free','Full analysis, always'],['₹199','One-time career pack'],['9','Algorithmic checks'],['0','Monthly charges']].map(([v,l])=><div key={l}><div style={{fontFamily:FONT,fontWeight:800,fontSize:28,color:'#fff',marginBottom:5}}>{v}</div><div style={{fontSize:13,color:'rgba(255,255,255,.72)',fontFamily:FONT}}>{l}</div></div>)}
