@@ -365,6 +365,18 @@ const DB = {
   async savePost(post){ const db=await loadFirebase(); if(db) await db.collection('blogs').doc(post.id).set(post); else { const l=JSON.parse(localStorage.getItem('rbhai_blogs')||'[]');localStorage.setItem('rbhai_blogs',JSON.stringify([post,...l.filter(x=>x.id!==post.id)])); } },
   async deletePost(id){ const db=await loadFirebase(); if(db) await db.collection('blogs').doc(id).delete(); else { const l=JSON.parse(localStorage.getItem('rbhai_blogs')||'[]');localStorage.setItem('rbhai_blogs',JSON.stringify(l.filter(x=>x.id!==id))); } },
   async loadPosts(){ const db=await loadFirebase(); if(db){const snap=await db.collection('blogs').orderBy('date','desc').get();return snap.docs.map(d=>d.data());} return JSON.parse(localStorage.getItem('rbhai_blogs')||'[]'); },
+  // Tracks IDs of built-in sample posts the admin has deleted, so they stay
+  // hidden across reloads even though they aren't real Firestore documents.
+  async loadHiddenPosts(){
+    const db=await loadFirebase();
+    if(db){const doc=await db.collection('meta').doc('hiddenPosts').get();return doc.exists?(doc.data().ids||[]):[];}
+    return JSON.parse(localStorage.getItem('rbhai_hidden_posts')||'[]');
+  },
+  async hidePost(id){
+    const db=await loadFirebase();
+    if(db){await db.collection('meta').doc('hiddenPosts').set({ids:window.firebase.firestore.FieldValue.arrayUnion(id)},{merge:true});}
+    else { const l=JSON.parse(localStorage.getItem('rbhai_hidden_posts')||'[]');if(!l.includes(id))localStorage.setItem('rbhai_hidden_posts',JSON.stringify([...l,id])); }
+  },
   async storeUser(user){ const db=await loadFirebase(); if(db) await db.collection('users').doc(String(user.id)).set({email:user.email,name:user.name||'',provider:user.photo?'google':'email',emailVerified:user.emailVerified||false,createdAt:new Date().toISOString()},{merge:true}); },
   async saveVault(userId,entry){
     const db=await loadFirebase();
@@ -1105,7 +1117,7 @@ function PostImage({src,alt,height}){
 
 function BlogPage({user,setPage}){
   const [posts,setPosts]=useState(DEFAULT_POSTS);const [post,setPost]=useState(null);
-  useEffect(()=>{DB.loadPosts().then(db=>{if(db.length>0){const ids=new Set(db.map(p=>p.id));setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id))]);}});},[]);
+  useEffect(()=>{Promise.all([DB.loadPosts(),DB.loadHiddenPosts()]).then(([db,hidden])=>{const ids=new Set(db.map(p=>p.id));const hid=new Set(hidden);setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id)&&!hid.has(p.id))]);});},[]);
   const featured=posts[0];const rest=posts.slice(1);
   return(
     <div style={{maxWidth:1060,margin:'0 auto',padding:'50px clamp(16px,4vw,32px)'}}>
@@ -1171,7 +1183,7 @@ function BlogAdmin(){
   const [uploadingCover,setUploadingCover]=useState(false);const [uploadingInline,setUploadingInline]=useState(false);
   const bodyRef=useRef(null);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
-  useEffect(()=>{DB.loadPosts().then(db=>{const ids=new Set(db.map(p=>p.id));setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id))]);});},[]);
+  useEffect(()=>{Promise.all([DB.loadPosts(),DB.loadHiddenPosts()]).then(([db,hidden])=>{const ids=new Set(db.map(p=>p.id));const hid=new Set(hidden);setPosts([...db,...DEFAULT_POSTS.filter(p=>!ids.has(p.id)&&!hid.has(p.id))]);});},[]);
   useEffect(()=>{
     const pending=localStorage.getItem('rbhai_edit_post');
     if(pending){
@@ -1216,7 +1228,7 @@ function BlogAdmin(){
   };
   const del=async id=>{
     if(!window.confirm('Delete this post?'))return;
-    try{await DB.deletePost(id);setPosts(p=>p.filter(x=>x.id!==id));}
+    try{await DB.deletePost(id);await DB.hidePost(id);setPosts(p=>p.filter(x=>x.id!==id));}
     catch(err){setMsg('❌ Delete failed: '+(err?.message||err));}
   };
   return(
